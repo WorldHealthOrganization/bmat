@@ -1,0 +1,31 @@
+Package: bmat
+Type: R Package
+Title: bmat
+Version: 1.0.0
+Authors@R: c(person("Gregory", "Guranich", email = "gguranic@umass.edu", role = c("aut")),
+             person("Emily", "Peterson", email = "emily.nancy.peterson@emory.edu", role = c("aut")),
+             person("Leontine", "Alkema", email = "lalkema@umass.edu", role = c("aut")))
+Description: BMat and BMis, maternal mortality estimation.
+License: What license it uses
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.3
+Depends:
+    R2jags,
+    R (>= 2.10)
+Imports:
+    magrittr,
+    R.utils,
+    truncnorm,
+    here,
+    readstata13,
+    readxl,
+    tibble,
+    tidyr,
+    tidybayes,
+    tolerance,
+    dplyr,
+    MCMCvis
+Suggests:
+    gridExtra,
+    ggnewscale
