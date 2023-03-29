@@ -1,3 +1,16 @@
+#' adjust_nonvr_noninq
+#'
+#' @param global 
+#' @param quantiles 
+#' @param datall 
+#' @param meta 
+#' @param jags_list 
+#' @param fit 
+#' @param z.q 
+#'
+#' @return dataframe of other data with adjustments
+#'
+#' @examples
 adjust_nonvr_noninq <- function(global,
                                 quantiles,
                                 datall,

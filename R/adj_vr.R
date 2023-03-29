@@ -1,3 +1,15 @@
+#' adjust_vr
+#'
+#' @param datall 
+#' @param meta 
+#' @param jags_list 
+#' @param estimates 
+#' @param fit 
+#' @param z.q 
+#'
+#' @return dataframe of CRVS data with adjustments
+#'
+#' @examples
 adjust_vr <- function(
                       datall,
                       meta,

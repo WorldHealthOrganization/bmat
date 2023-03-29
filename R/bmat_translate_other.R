@@ -1,3 +1,12 @@
+#' translate_other
+#'
+#' @param main_data 
+#' @param meta 
+#' @param indices_by_data_model 
+#' @param imputeSElogPM 
+#'
+#' @return List of data inputs from the source type "other" to be supplied to the jags model
+#'
 translate_other <- function(
   main_data,
   meta,

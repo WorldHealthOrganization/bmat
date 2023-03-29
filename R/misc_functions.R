@@ -140,9 +140,116 @@ GetSums <- function(year_start, # exact start time e.g 1991.1
   return(sums)
 }
 
+add_who_env_tovrdat <- function(meta_precrisis, dat_merged) {
+  colnames(meta_precrisis$deaths.ct) <- meta_precrisis$year.t
+  deaths2 <- tibble::as_tibble(meta_precrisis$deaths.ct)
+  deaths3 <- cbind("iso" = meta_precrisis$iso.c, deaths2)
+  deaths4 <-
+    deaths3 %>%
+    tidyr::gather(key = "year",
+                  value = "whoenv",
+                  -1,
+                  convert = T)
+  deaths4
+  names(dat_merged)
+  re3 <-
+    dplyr::left_join(dat_merged, deaths4, by = c("iso" = "iso", "start" = "year"))
+  return(re3)
+}
 
+is.fraction <-
+  function(x, tol = .Machine$double.eps^0.5) {
+    whole <- abs(x - round(x)) < tol
+    frac <- !whole
+    return(frac)
+  }
+
+
+index_by_data_model <- function(
+    main_data
+) {
+  isjinq_all.d <- (main_data$type=="inq"
+                   & !is.na(main_data$final_pm)
+                   &!is.na(main_data$final_env)
+                   &main_data$include)
+  isjinq.d <- isjinq_all.d & main_data$completeness_inq > 0.95
+  isjinq_incomplete.d <- isjinq_all.d & !(main_data$completeness_inq > 0.95)
+  isj.d<-main_data$type=="vr" & main_data$include
+  isjnew.d<- isj.d==FALSE & isjinq.d==FALSE & !is.na(main_data$final_pm) & main_data$include
+  return(list(
+    isjinq.d = isjinq.d,
+    isjinq_incomplete.d = isjinq_incomplete.d,
+    isj.d = isj.d,
+    isjnew.d = isjnew.d
+  ))
+}
+
+
+#' v2015ct
+#'
+#' function to generate v2015.ct
+#'
+#' @param meta: list of many attributes
+#'
+#' @return v2015.ct: matrix of dimensions (meta$C,meta$nyears)
+#'
+#' @examples
+#'
+#' @family functions used to read covariates
+v2015ct <- function(meta){
+  print("generating v2015.ct...")
+  #print(meta$C)
+  #print(meta$nyears)
+  v2015.ct <- matrix(NA,meta$C,meta$nyears)
+  for (c in 1:meta$C){
+    for (t in 1:meta$nyears){
+      v2015.ct[c,t] <- meta$caids*meta$kaids*meta$gfr.ct[c,t]/(1+meta$caids*(meta$kaids-1)*meta$gfr.ct[c,t])
+    }}
+  return(v2015.ct)
+}
 #-----------------------
 # functions related to SEs
+
+
+#' Covariant Matrix
+#'
+#' function to generate covariant Matrix
+#'
+#' @param meta: list of many attributes
+#'
+#' @return list of 2 elements: matrix of covariants and means (not sure)
+#'
+#' @examples
+#'
+#' @family functions used to read covariates
+covariantMatrix <- function(meta){
+  print("Generating Matrix of Covariants")
+  H <- length(meta$name.h)
+  Xunst.cth <- X.cth <- array(NA, c(meta$C, meta$nyears, H))
+  
+  dimnames(Xunst.cth)[[3]] <- meta$name.h
+  
+  Xunst.cth[,,"logGDP"] <- meta$logGDP.ct
+  Xunst.cth[,,"logGFR"] <- log(meta$gfr.ct)
+  Xunst.cth[,,"SAB"] <- meta$sab.ct
+  # standardize X to be centered at zero
+  means.h <- apply(Xunst.cth, 3, mean)
+  for (h in 1:H){
+    X.cth[,,h] <- Xunst.cth[,,h] - means.h[h]
+  }
+  dimnames(X.cth)[[3]] <- meta$name.h
+  
+  return(list(X.cth = X.cth, means.h = means.h))
+}
+
+#-----------------------
+Getc.i <- function(iso.i, iso.c){
+  getc.i <- rep(NA, length(iso.i))
+  for (i in 1:length(iso.i)){
+    getc.i[i] <- which(iso.c == iso.i[i])
+  }
+  return(getc.i)
+}
 
 #functions used to get stoch error for PM
 # does not work (and is not used) for zero entries

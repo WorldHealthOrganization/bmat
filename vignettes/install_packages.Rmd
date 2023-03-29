@@ -15,8 +15,13 @@ install.packages(
     "tibble",
     "tidyr",
     'tidybayes',
+    "tinytex",
     "tolerance",
-    "dplyr"
+    "dplyr",
+    "kableExtra",
+    "float",
+    "ggplot2",
+    "ggnewscale"
 ),
   dependencies = TRUE
 )

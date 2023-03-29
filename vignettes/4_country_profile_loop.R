@@ -23,6 +23,7 @@
 # tlmgr_update() 
 # install.packages("kableExtra")
 # install.packages("float")
+# install.packages("ggplot2")
 # install.packages("ggnewscale")
 ##########################################################################################################
 

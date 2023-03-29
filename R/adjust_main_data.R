@@ -1,6 +1,17 @@
 
-
-
+#' adjust_main_data
+#'
+#' @param fit 
+#' @param main_data 
+#' @param meta 
+#' @param jags_list 
+#' @param estimates 
+#' @param quantiles_for_adjustment 
+#' @param global 
+#'
+#' @return data frame with adjustments applied to observed data
+#'
+#' @examples
 adjust_main_data <- function(fit,
                              main_data,
                              meta,

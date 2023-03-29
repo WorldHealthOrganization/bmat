@@ -1,3 +1,14 @@
+#' adjust_inq
+#'
+#' @param datall 
+#' @param meta 
+#' @param jags_list 
+#' @param fit 
+#' @param z.q 
+#'
+#' @return dataframe of inq data (specialized study data) with adjustments
+#'
+#' @examples
 adjust_inq <- function(
                        datall,
                        meta,

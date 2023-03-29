@@ -1,3 +1,16 @@
+#' compare_input_data
+#'
+#' @param metanew 
+#' @param metaold 
+#' @param value_matrixnew 
+#' @param value_matrixold 
+#' @param forweight.ct 
+#' @param country_ref 
+#'
+#' @return data frame which has input data comparison in the form of percent changes. e.g. percent change in all cause deaths between meta files
+#' @export
+#'
+#' @examples
 compare_input_data <- function(metanew, metaold, value_matrixnew, value_matrixold, forweight.ct, country_ref) {
   dfnew <- matrix_ct_to_df_with_isoyear(metanew, value_matrix= value_matrixnew, value_name = "value")  %>%
     dplyr::filter(year > 1999) %>%

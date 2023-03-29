@@ -1,3 +1,13 @@
+#' translate_core
+#'
+#' @param meta 
+#' @param referenceyear 
+#' @param sqrtgamma0max 
+#' @param max.sigma.lambda 
+#'
+#' @return list of data for jags. this list contains data inputs which are not specific to data source type
+#'
+#' @examples
 translate_core <- function(meta, 
                            referenceyear,
                            sqrtgamma0max,

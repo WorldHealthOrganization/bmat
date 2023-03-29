@@ -1,3 +1,11 @@
+#' translate_specialized
+#'
+#' @param main_data 
+#' @param meta 
+#' @param indices_by_data_model 
+#'
+#' @return List of jags data inputs based on specialized studies
+#'
 translate_specialized <- function(
   main_data,
   meta,

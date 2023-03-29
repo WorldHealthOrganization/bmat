@@ -1,3 +1,11 @@
+#' translate_specialized_incomplete
+#'
+#' @param main_data 
+#' @param meta 
+#' @param indices_by_data_model 
+#'
+#' @return List of jags data from incomplete specialized studies
+#'
 translate_specialized_incomplete <- function(
   main_data,
   meta,

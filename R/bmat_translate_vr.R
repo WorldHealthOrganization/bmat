@@ -1,3 +1,11 @@
+#' translate_vr
+#'
+#' @param main_data 
+#' @param meta 
+#' @param indices_by_data_model 
+#'
+#' @return List of jags data from crvs data 
+#'
 translate_vr <- function(
   main_data,
   meta,
