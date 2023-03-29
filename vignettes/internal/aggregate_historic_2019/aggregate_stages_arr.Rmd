@@ -1,0 +1,172 @@
+---
+title: "Untitled"
+output: github_document
+---
+
+
+# BEYOND HERE NOT NEEDED FOR WHO SDG DATA REQUEST
+Get ARR for aggregates
+```{r}
+stages <- read.csv("mmr.csv") %>%
+  dplyr::filter(bound == "point") %>%
+  dplyr::mutate(stage = ifelse(value > 999, 1,
+                               ifelse(value < 1000 & value > 299, 2,
+                                      ifelse(value < 300 & value > 49, 3,
+                                             ifelse(value < 50, 4, NA))))) %>%
+  dplyr::filter(year == 2017) %>%
+  dplyr::select(iso_alpha_3_code = iso,
+                stage)
+
+# Stage 1 MMR >=1000
+# Stage 2 MMR 300-999
+# Stage 3 MMR 50-299
+# Stage 4 MMR <50
+
+devtools::load_all()
+crisis_deaths <- matrix_ct_to_df(matrix = meta$crisisdeaths.ct, C = meta$C, value_name = "crisis_deaths")
+deaths <- matrix_ct_to_df(matrix = meta$deaths.ct, C = meta$C, value_name = "deaths")
+births <- matrix_ct_to_df(matrix = meta$births.ct, C = meta$C, value_name = "births")
+aids <-  matrix_ct_to_df(matrix = jags_list$muaids.ct, C = meta$C, value_name = "aids")
+gfr <-  matrix_ct_to_df(matrix = meta$gfr.ct, C = meta$C, value_name = "gfr")
+t15t50 <- matrix_ct_to_df(matrix = meta$t15t50.ct, C = meta$C, value_name = "t15t50")
+l15 <- matrix_ct_to_df(matrix = meta$l15.ct, C = meta$C, value_name = "l15")
+
+meta_df <- crisis_deaths %>% 
+  dplyr::left_join(deaths) %>% 
+  dplyr::left_join(births) %>% 
+  dplyr::left_join(aids) %>%
+  dplyr::left_join(gfr) %>%
+  dplyr::left_join(t15t50) %>%
+  dplyr::left_join(l15)
+
+samples_df <- samples_df %>%  # this historic object is in form of maternal deaths so we turn make into mmr by dividing by births below
+  dplyr::left_join(meta_df) 
+
+quantiles = c(0.1, 0.5, 0.9)
+el <- list()
+nlag <- 1
+quantiles = c(0.1, 0.5, 0.9)
+el <- list()
+nlag <- 1
+
+period_df <- data.frame(start = c(1999,1990,2000,2010),
+                        end = c(2017, 1999, 2009, 2017) )
+period_n <- nrow(period_df)
+pl <- list()
+for (region in unique(geo$m49_r)) {
+  geo_sub <- geo %>% dplyr::filter(m49_r == region)
+  samples_sub <- samples_df %>% 
+    dplyr::filter(iso_alpha_3_code %in% geo_sub$iso_alpha_3_code) %>%
+    dplyr::mutate(mmr = mu/births) %>%
+    dplyr::group_by(year, s) %>%
+    dplyr::mutate(weight_denominator = sum(births)) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(weight = births/weight_denominator) %>%
+    dplyr::mutate(mmr = mmr * weight) %>%
+    dplyr::group_by(year, s) %>%
+    dplyr::summarize(mmr = sum(mmr)) %>% # at this point we have samples for region instead of country (or w/e grouping)
+    dplyr::ungroup()
+  for(n in 1:period_n) {
+    start <- period_df$start[n]
+    end <- period_df$end[n]
+    pl[[n]] <- samples_sub %>%
+      dplyr::filter(year %in% c(start, end)) %>%
+      dplyr::group_by(s) %>%
+      dplyr::mutate(yearlag = year - dplyr::lag(year, n = nlag)) %>%
+      dplyr::mutate(mmrlag = dplyr::lag(mmr, n = nlag)) %>%
+      dplyr::mutate(arr = -(log(mmr/mmrlag)/yearlag)) %>% # using continuous form of reduction
+      dplyr::group_by(year) %>%
+      tidyr::drop_na() %>%
+      dplyr::summarise(arr = quantile(arr, !!quantiles, na.rm = TRUE)*100000) %>%
+      dplyr::mutate(quantiles = !!quantiles) %>%
+      dplyr::mutate(m49_r = region) %>%
+      dplyr::mutate(period_start = start) %>%
+      dplyr::mutate(period_end = end) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-year)
+  }
+  el[[paste(region)]] <- do.call(rbind, pl)
+}
+
+estimates <- do.call(rbind, el)
+```
+
+Get estimates for all countries these are needed for historical aggregates which use point estimates from countries to calculate aggregate point estimates
+```{r}
+estimates_country <- samples_df %>%
+  dplyr::mutate(mmr = mu/births*100000) %>%
+  dplyr::group_by(iso_alpha_3_code, c, year, t) %>%
+  dplyr::summarise(mmr = quantile(mmr, !!quantiles, na.rm = TRUE)) %>%
+  dplyr::mutate(quantiles = !!quantiles)
+
+
+estimates_country <- estimates_country %>% 
+  dplyr::left_join(meta_df %>% dplyr::select(births, c, t))
+```
+Get aggregate point estimates from country estimates
+```{r}
+#start with country estimates here
+point_estimates <- geo %>%
+  dplyr::left_join(estimates_country) %>%
+  dplyr::filter(quantiles == 0.5) %>%
+  dplyr::group_by(m49_r, year) %>%
+  dplyr::mutate(weight_denominator = sum(births)) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(weight = births/weight_denominator,
+                mmr = mmr*weight) %>%
+  dplyr::group_by(m49_r, year) %>%
+  dplyr::summarise(mmr = sum(mmr)) %>%
+  dplyr::mutate(quantiles = 0.5)
+
+bounds <- estimates %>%
+  dplyr::filter(quantiles %in% c(0.1, 0.9))
+
+estimates_final <- rbind(bounds,
+                         point_estimates) %>%
+  dplyr::arrange(m49_r, 
+                 year, 
+                 quantiles) %>%
+  dplyr::rename(Value = mmr, 
+                Percentile = quantiles, 
+                TimePeriod = year,
+                GeoAreaCode = m49_r) %>%
+  dplyr::mutate(Nature = "E",
+                Time_Detail = "Calendar year")
+
+write.csv(estimates_final, "Aggregate_RC_Estimates_Indicator_3.1.1.csv")
+
+
+
+library(dplyr)
+# temp2 <- read.csv("Aggregate_RC_Estimates_Indicator_3.1.1.csv") %>%
+#   dplyr::filter(GeoAreaCode %in% c(
+# 98501,
+# 98502,
+# 98503,
+# 98504,
+# 98505
+# ))
+temp2 <- read.csv("Aggregate_RC_Estimates_Indicator_3.1.1.csv") %>%
+  dplyr::select(-Indicator, -X) %>%
+  dplyr::mutate(Source = "UNMMEIG") %>%
+  dplyr::mutate(Units = "Maternal Mortality per 100,000 live births") %>%
+  dplyr::mutate(Disaggregation = ifelse(Percentile == 0.5, "Uncertainty bounds: mid-point",
+                                        ifelse(Percentile == 0.1, "Uncertainty bounds: lower bound",
+                                               ifelse(Percentile == 0.9, "Uncertainty bounds: upper bound", NA))
+                                        )) %>%
+  dplyr::select(-Percentile)
+
+temp <- readxl::read_excel(here::here("vignettes/aggregate_historic_2019/DataTemplate_RCs_20210215.xlsx"), sheet = 1) %>%
+  dplyr::select(-c("Value", "Units", "Nature", "Source", "Disaggregation")) %>%
+  dplyr::filter(TimePeriod == 2000) %>%
+  dplyr::select(-TimePeriod) %>%
+  dplyr::select(-Time_Detail)
+#
+
+estimates_final_xl <- temp %>%
+  dplyr::right_join(temp2, by = c("GeoAreaCode"))
+xlsx::write.xlsx(estimates_final_xl, "Aggregate_RC_Estimates_Indicator_3.1.1.xlsx", sheetName = "Aggregate_Estimates",
+  append = TRUE)
+
+```
+

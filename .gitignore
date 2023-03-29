@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+output
+test
+data-gitignore
+vignettes/country_profiles
+data-archive_m60

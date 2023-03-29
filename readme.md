@@ -22,8 +22,8 @@ BMis and BMat model for the estimation of the maternal mortality rate
 
 ## Requirements
 
-For usage, an R installation (4.2.2), a JAGS installation (4.x), and a
-working developer environment such as an Rtools installation (4.2) are
+For usage, an R installation (≥3.6.0), a JAGS installation (4.x), and a
+working developer environment such as an Rtools installation (≥4.2) are
 required. R and Rtools can be downloaded on CRAN. JAGS is a program for
 the analysis of Bayesian models using Markov Chain Monte Carlo (MCMC)
 (Plummer, 2017). JAGS is written in C++ and is portable to all major
@@ -63,29 +63,18 @@ without iterative installation.
 
 ## Data inputs
 
+The data used for the following use cases is accompanied by a meta file.
 The data for the use cases can be found here
 [bmat/data-raw/](https://github.com/AlkemaLab/bmat/tree/master/data-raw/meta.csv).
-A meta file describing the data for use cases can be found here.
+The meta file can be found here
 [bmat/data-raw/meta.csv](https://github.com/AlkemaLab/bmat/tree/master/data-raw/meta.csv).
-For more detailed information about the data used please refer to the
-WHO report, Trends in maternal mortality: 2000 to 2020. Geneva: WHO,
-UNICEF, UNFPA and The World Bank; 2023.
 
 ## <a name="use"></a>
 
 ## Use cases
 
-#### Case 1. One country run
-
-To produce one country estimates which are based on the latest fixed
-global estimates, refer to the following vignette
-[bmat/vignettes/0_fit_one_country.R](https://github.com/AlkemaLab/bmat/tree/master/vignettes)
-
-#### Case 2. Full estimation process
-
-For the full process of producing estimates for all countries from start
-to finish, run the following vignettes in order. Vignettes can be found
-here
+To produce estimates, run the following vignettes in order. Vignettes
+can be found here
 [bmat/vignettes/](https://github.com/AlkemaLab/bmat/tree/master/vignettes).
 The second and third use case are computationally intensive when using
 settings that are beyond that of a test run. This will generally require

@@ -1,0 +1,558 @@
+---
+title:
+output: pdf_document
+classoption: landscape
+# header-includes:
+#   - \usepackage{draftwatermark}
+params:
+  text: ""
+  iso_alpha_3_code: ""
+  who_name: ""
+  round_name_profile: ""
+  years: ""
+  df: ""
+  df_excluded: ""
+  estimates: ""
+  estimates_arr: ""
+  meta: ""
+  table1_years: ""
+  lang: ""
+---
+# `r params$text$"main title"` `r params$who_name` `r params$years`
+
+## `r params$text$"main title 2"`
+
+```{r setup, include=FALSE, results='hide',message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+devtools::load_all()
+library(kableExtra)
+library(float)
+align_headers <- "l"
+```
+
+
+<!-- page 1 -->
+```{r echo=FALSE ,message=FALSE, warning=FALSE}
+# TABLE 1 ESTIMATES PAGE 1
+
+
+tbl1 <- estimates %>%
+  dplyr::ungroup() %>%
+  dplyr::rename(low = `0.1`,
+                mid = `0.5`,
+                up = `0.9`) %>%
+  dplyr::select(year_mid, parameter, low, mid, up) %>%
+  tidyr::pivot_wider(
+    names_from = parameter,
+    values_from = c(low, mid, up)
+  ) %>%
+  dplyr::mutate_at(c("mid_mmr", "low_mmr", "up_mmr"), round) %>%
+  dplyr::mutate_at(c("mid_pm", "low_pm", "up_pm"), round, 2) %>%
+  dplyr::mutate(mmr = paste0(mid_mmr,' [', 	low_mmr,', ',	up_mmr, ']'),
+                pm = paste0(mid_pm,' [', 	low_pm,', ',	up_pm, ']')) %>%
+  dplyr::mutate(
+                births = round(mid_births/1000),
+                maternal = round(mid_maternal_deaths),
+                hiv = round(mid_hiv_related_indirect_maternal_deaths)) %>%
+  dplyr::select(year = year_mid,
+                mmr,
+                maternal,
+                hiv,
+                births,
+                pm) %>%
+  dplyr::relocate(year, mmr, pm, hiv, births) %>%
+  dplyr::filter(year %in% table1_years)
+
+a <- params$text$"table 1 referenec a"
+b <- params$text$"table 1 reference b"
+c <- params$text$"reference live births"
+d <- params$text$"reference mortality"
+sym1 <- params$text$"table 1 symbol 1"
+sym2 <- params$text$"table 1 symbol 2"
+sym_period <- params$text$"period endpoints statement"
+extra <- NULL
+if(iso_alpha_3_code == "SRB") {
+extra <- "Data for Serbia do not include data for Kosovo (United Nations Security Council Resolution 1244 (1999))"
+}
+  # "Periods use interval notation where [a,b) describes an interval greater than or equal to a and less than b and [a,b] describes an interval greater than or equal to a and less than or equal to b"
+kableExtra::kbl(tbl1,
+                booktabs = T,
+                align = align_headers,
+                caption = params$text$"table 1 title",
+                escape = F,
+                col.names = kableExtra::linebreak(c(
+                              paste0(params$text$"table 1 column names 1"),
+                              paste0(
+                                params$text$"table 1 column names 2", kableExtra::footnote_marker_alphabet(1), kableExtra::footnote_marker_symbol(1), kableExtra::footnote_marker_symbol(2)
+                                ),
+                              paste0(
+                                params$text$"table 1 column names 3",kableExtra::footnote_marker_alphabet(2), kableExtra::footnote_marker_symbol(1), kableExtra::footnote_marker_symbol(2)
+                                ),
+                              paste0(
+                                params$text$"table 1 column names 4",kableExtra::footnote_marker_symbol(2)
+                                ),
+                              paste0(
+                                params$text$"table 1 column names 5",kableExtra::footnote_marker_alphabet(3),
+                                "\n ",
+                                params$text$"table 1 column names 5 denominator"),
+                              paste0(
+                                params$text$"table 1 column names 6", kableExtra::footnote_marker_symbol(2)
+                                )
+                              ),
+                              align = align_headers
+                              )
+                ) %>%
+  # kable_styling(full_width = T) %>%
+  kableExtra::kable_styling(latex_options = c("striped", "HOLD_position"))  %>%
+  kableExtra::footnote(symbol = c(sym1, sym2, extra),
+                       alphabet = c(a,b,c),
+                        escape = FALSE,
+                       threeparttable = T)
+
+```
+
+
+\newpage
+<!-- page 2  estimates arr and change -->
+```{r echo=FALSE ,message=FALSE, warning=FALSE}
+sym2 <- params$text$"table 1 symbol 2"
+
+estimates_arr <- estimates_arr %>%
+  dplyr::ungroup() %>%
+  dplyr::select(-iso_alpha_3_code) %>%
+  dplyr::rename(low = `0.1`,
+                mid = `0.5`,
+                up = `0.9`) %>%
+  dplyr::mutate_at(c("low", "mid", "up"), round, 2) %>%
+  dplyr::mutate(value = paste0(mid," [",low,", ", up,"]")) %>%
+  dplyr::select(period, parameter, value) %>%
+  tidyr::pivot_wider(names_from = parameter, values_from = value)
+kableExtra::kbl(estimates_arr,
+                booktabs = T,
+                align = align_headers,
+                escape = F,
+                caption = params$text$"table 1 title",
+                col.names = c(
+                              params$text$"table 2 column names 1",
+                              paste0(params$text$"table 2 column names 2",kableExtra::footnote_marker_symbol(1)),
+                              paste0(params$text$"table 2 column names 3", kableExtra::footnote_marker_symbol(1, double_escape = FALSE))
+                )
+                ) %>%
+  kableExtra::kable_styling(latex_options = c("scale_down", "striped", "HOLD_position"))  %>%
+  kableExtra::footnote(symbol = c(sym2),
+                        escape = FALSE,
+                       threeparttable = T) %>%
+  kableExtra::column_spec(1, width = "1.25in") %>%
+  kableExtra::column_spec(2:3, width = "3in") 
+```
+
+\newpage
+# `r params$text$"table 3 title"`
+<!-- page 3  vr data -->
+```{r echo=FALSE ,message=FALSE, warning=FALSE}
+tbl3 <- df %>%
+  dplyr::filter(type == 'vr') %>%
+  dplyr::filter(include) %>%
+  dplyr::select(maternal_deaths = obs_matdeaths,
+                female_deaths = obs_env,
+                adjustment = multiplier,
+                sens,
+                spec,
+                completeness = rho_bmat,
+                usability_percentage,
+                period,
+                include) %>%
+  dplyr::mutate(
+    maternal_deaths_excluded = ifelse(!include, maternal_deaths, NA),
+    maternal_deaths = ifelse(include, maternal_deaths, NA),
+    completeness = completeness*100
+  ) %>%
+  dplyr::select(-include) %>%
+  dplyr::relocate(period,
+                  maternal_deaths,
+                  female_deaths) %>%
+  dplyr::arrange(period)
+
+
+
+a <- params$text$"icd statement"
+b <- params$text$"table 3 reference b"
+c <- params$text$"table 3 reference c"
+d <- params$text$"table 3 reference d"
+e <- params$text$"table 3 reference e"
+f <- params$text$"table 3 reference f"
+g <- params$text$"table 3 reference g"
+h <- params$text$"table 3 reference h"
+sym2 <- params$text$"reference crvs adjustment"
+
+if(nrow(tbl3) > 0) {
+kableExtra::kbl(tbl3,
+                format='latex',
+                booktabs = T,
+                                align = align_headers,
+                caption = params$text$"table 3 title",
+                col.names = c(paste0(params$text$"table 3 column names 1", kableExtra::footnote_marker_symbol(1)),
+                              paste0(params$text$"table 3 column names 2",kableExtra::footnote_marker_alphabet(1)),
+                              paste0(params$text$"table 3 column names 3",kableExtra::footnote_marker_alphabet(2)),
+                              paste0(params$text$"table 3 column names 4",kableExtra::footnote_marker_alphabet(3), kableExtra::footnote_marker_symbol(2)),
+                              paste0(params$text$"table 3 column names 5",kableExtra::footnote_marker_alphabet(4), kableExtra::footnote_marker_symbol(2)),
+                              paste0(params$text$"table 3 column names 6",kableExtra::footnote_marker_alphabet(5), kableExtra::footnote_marker_symbol(2)),
+                              paste0(params$text$"table 3 column names 7",kableExtra::footnote_marker_alphabet(6), kableExtra::footnote_marker_symbol(2)),
+                              paste0(params$text$"table 3 column names 8",kableExtra::footnote_marker_alphabet(7)),
+                              paste0(params$text$"table 3 column names 9",kableExtra::footnote_marker_alphabet(8))
+                                ),
+                escape = FALSE,
+                longtable = T) %>%
+  kableExtra::kable_styling(latex_options = c("scale_down","striped", "HOLD_position", "repeat_header"),
+                            font_size = 7) %>%
+  kableExtra::footnote(symbol = c(sym_period, sym2), alphabet = c(a,b,c,d,e,f,g,h), escape = FALSE, threeparttable = T)  %>%
+  kableExtra::column_spec(1:9, width = ".72in")
+} 
+
+```
+`r if(nrow(tbl3) == 0 & lang == "English"){"No data available"}`
+`r if(nrow(tbl3) == 0 & lang == "Spanish"){"Datos no disponibles"}`
+`r if(nrow(tbl3) == 0 & lang == "French"){"Pas de données disponibles"}`
+
+<!-- vr excluded -->
+\newpage
+# `r params$text$"table 4 title"`
+```{r echo=FALSE ,message=FALSE, warning=FALSE}
+tbl_vr_ex <- df_excluded %>%
+  dplyr::filter(type == 'vr') %>% #might need to exclude other types shown in other sections
+  dplyr::filter(!include) %>%
+  dplyr::select(completeness = rho_bmat,
+                usability_percentage,
+                period,
+                include_reason) %>%
+  dplyr::mutate(
+    completeness = completeness*100,
+    usability_percentage = usability_percentage*100
+  ) %>%
+  dplyr::relocate(period) %>%
+  dplyr::arrange(period)
+
+tbl_vr_ex <- tbl_vr_ex %>%
+  dplyr::mutate(include_reason = ifelse(include_reason == "usability less than 60%", "Usability < 60\\%",
+                                  ifelse(include_reason == "CRVS overlaps with spec. study", params$text$"table 4 reason for exclusion values 1",
+                                        ifelse(include_reason == "Quality of census measurement not clear", params$text$"table 4 reason for exclusion values 2",
+                                               ifelse(include_reason == "PM could not be obtained", params$text$"table 4 reason for exclusion values 3",
+                                                       ifelse(include_reason == "Start date before 1985", params$text$"table 4 reason for exclusion values 4",
+                                                              ifelse(include_reason == "Study not nationally representative", params$text$"table 4 reason for exclusion values 5",
+                                                                     ifelse(include_reason == "End after last year in estimates", params$text$"table 4 reason for exclusion values 6",
+                                                                            include_reason))))))))
+
+if (nrow(tbl_vr_ex) > 0) {
+kableExtra::kbl(tbl_vr_ex,
+                booktabs = T,
+                                align = align_headers,
+                caption = params$text$"table 4 title",
+                col.names = c(paste0(params$text$"table 4 column names 1", kableExtra::footnote_marker_symbol(1)),
+                              paste0(params$text$"table 4 column names 2",kableExtra::footnote_marker_alphabet(1)),
+                              paste0(params$text$"table 4 column names 3",kableExtra::footnote_marker_alphabet(2)),
+                              params$text$"table 4 column names 4"
+                                ),
+                escape = FALSE,
+                longtable = T
+                ) %>%
+  kableExtra::kable_styling(latex_options = c("scale_down", "striped", "HOLD_position", "repeat_header"))  %>%
+  kableExtra::footnote(symbol = c(sym_period), alphabet = c(f,g), escape = FALSE, threeparttable = T)
+
+}
+```
+`r if(nrow(tbl_vr_ex) == 0 & lang == "English"){"No data excluded"}`
+`r if(nrow(tbl_vr_ex) == 0 & lang == "Spanish"){"No datos excluidos"}`
+`r if(nrow(tbl_vr_ex) == 0 & lang == "French"){"Aucune donnée exclue"}`
+
+
+<!-- other data -->
+\newpage
+# `r params$text$"table 5 title"`
+```{r echo=FALSE ,message=FALSE, warning=FALSE, error=TRUE}
+# Pregnancy related deathso #do we even have this for any country? its not in the data output or main_data df$definition
+#we have definition == 'pregn' and final_pm but no envelope to calculate deaths from this
+#ita footnote
+extra_ITA_note <- NULL
+if (iso_alpha_3_code == "ITA") {
+  extra_ITA_note <- "For further information on the ItOSS methodology see: Donati S, Maraschini A, Lega I, D'Aloja P, Buoncristiano M, Manno V, et al. Maternal mortality in Italy: Results and perspectives of record-linkage analysis. Acta Obstet Gynecol Scand 2018 Nov; 97(11):1317-1324"
+}
+tbl5 <- df %>%
+  dplyr::filter(type != 'vr') %>% #might need to exclude other types shown in other sections
+  dplyr::filter(include) %>%
+  dplyr::select(maternal_deaths = env_mat_final,
+                female_deaths = obs_env,
+                final_pm,
+                mmr_adjusted = mmr.adj.postmod,
+                mmr = final_mmr, #final_mmr_before_crisis,
+                definition,
+                source = citation_short,
+                period,
+                source_type = type,
+                fp,
+                fn,
+                up) %>%
+  dplyr::mutate(
+    pregnancy_related_deaths = NA,
+    maternal_pm = ifelse(definition == 'maternal', final_pm, NA),
+    pregn_pm = ifelse(definition == 'pregn', final_pm, NA),
+    mmr_adjusted = mmr_adjusted*100000,
+    mmr = mmr*100000
+  )  %>%
+    dplyr::mutate(source_type = ifelse(source_type == "inq", "Specialized study",
+                                ifelse(source_type == "vr", "CRVS",
+                                       ifelse(source_type == "misc", "Miscellaneous",
+                                              ifelse(source_type == "dhs", "Survey",
+                                                                 ifelse(source_type == "census", "Census", source_type)))))) %>%
+  dplyr::select(-final_pm, -definition) %>%
+  dplyr::relocate(period,
+                  source,
+                  source_type,
+                  maternal_deaths,
+                  pregnancy_related_deaths,
+                  female_deaths,
+                  maternal_pm,
+                  pregn_pm,
+                  mmr,
+                  mmr_adjusted) %>%
+  dplyr::arrange(period)
+
+tbl5 <- tbl5 %>%
+  dplyr::mutate(source_type = ifelse(source_type == "Specialized study", params$text$"table 5 source type 1",
+                                     ifelse(source_type == "Census", params$text$"table 5 source type 2",
+                                            ifelse(source_type == "Survey", params$text$"table 5 source type 3",
+                                                   ifelse(source_type == "Miscellaneous", params$text$"table 5 source type 4",
+                                                           ifelse(source_type == "CRVS", params$text$"table 5 source type 5", source_type))))))
+
+# This hack hides maternal deaths for IND spec. studies per request by JC
+if (iso_alpha_3_code == "IND") {
+  tbl5 <- tbl5 %>%
+    dplyr::mutate(maternal_deaths = ifelse(source_type == "Specialized study", NA, maternal_deaths))
+}
+
+
+a <- params$text$"table 5 reference a"
+b <- params$text$"table 5 reference b"
+c <- params$text$"table 5 reference c"
+d <- params$text$"table 5 reference d"
+#hacked to go in alph order, change to the object letter in the spreadhsheet eventually i.e. next one should have cell renamed to ref f etc
+f <- params$text$"table 5 reference e"
+g <- params$text$"table 5 reference f"
+h <- params$text$"table 5 reference g"
+e <- params$text$"table 5 reference h"
+sym1 <- params$text$"table 5 symbol 1"
+sym2 <- params$text$"table 5 symbol 2"
+if (nrow(tbl5) > 0) {
+kableExtra::kbl(tbl5,
+                booktabs = T,
+                align = align_headers,
+                caption = params$text$"table 5 title",
+                col.names = kableExtra::linebreak(c(
+                              paste0(params$text$"table 5 column names 1", kableExtra::footnote_marker_symbol(1)),
+                              params$text$"table 5 column names 2",
+                              params$text$"table 5 column names 3",
+                              paste0(params$text$"table 5 column names 4", kableExtra::footnote_marker_alphabet(1)),
+                              paste0(params$text$"table 5 column names 5",kableExtra::footnote_marker_alphabet(2)),
+                              params$text$"table 5 column names 6",
+                              paste0(params$text$"table 5 column names 7",kableExtra::footnote_marker_alphabet(3)),
+                              paste0(params$text$"table 5 column names 8",kableExtra::footnote_marker_alphabet(4), kableExtra::footnote_marker_symbol(3)),
+                              paste0(params$text$"table 5 column names 9", kableExtra::footnote_marker_alphabet(5)),
+                              paste0(params$text$"table 5 column names 10"),
+                              paste0("F+",kableExtra::footnote_marker_alphabet(6), kableExtra::footnote_marker_symbol(2)),
+                              paste0("F-",kableExtra::footnote_marker_alphabet(7), kableExtra::footnote_marker_symbol(2)),
+                              paste0("U+",kableExtra::footnote_marker_alphabet(8), kableExtra::footnote_marker_symbol(2))
+                ),
+                align = align_headers),
+                escape = FALSE,
+                longtable = T) %>%
+  kableExtra::kable_styling() %>%
+  kableExtra::kable_styling(latex_options = c("scale_down", "striped", "HOLD_position", "repeat_header"),
+                            font_size = 7) %>%
+  kableExtra::footnote(symbol = c(sym_period, sym1, sym2, extra_ITA_note), alphabet = c(a,b,c,d,e,f,g,h), escape = FALSE, threeparttable = T) %>%
+  kableExtra::column_spec(1, width = ".7in") %>%
+  kableExtra::column_spec(2, width = ".9in") %>%
+  kableExtra::column_spec(3, width = ".9in") %>%
+  kableExtra::column_spec(4:8, width = ".5in") %>%
+  kableExtra::column_spec(9:10, width = ".8in") %>%
+  kableExtra::column_spec(11:13, width = ".22in") 
+} 
+```
+`r if(nrow(tbl5) == 0 & lang == "English"){"No data available"}`
+`r if(nrow(tbl5) == 0 & lang == "Spanish"){"Datos no disponibles"}`
+`r if(nrow(tbl5) == 0 & lang == "French"){"Pas de données disponibles"}`
+
+<!-- other data excluded -->
+\newpage
+# `r params$text$"table 6 title"`
+```{r echo=FALSE ,message=FALSE, warning=FALSE}
+tbl6 <- df_excluded %>%
+  dplyr::filter(type != 'vr',
+                !include) %>% #might need to exclude other types shown in other sections
+  dplyr::select(include,
+                include_reason,
+                source = citation_short,
+                source_type = type,
+                period) %>%
+  dplyr::select(-include) %>%
+  dplyr::mutate(source_type = ifelse(source_type == "inq", "Specialized study",
+                                ifelse(source_type == "vr", "CRVS",
+                                       ifelse(source_type == "misc", "Miscellaneous",
+                                              ifelse(source_type == "dhs", "Survey",
+                                                     ifelse(source_type == "census", "Census",
+                                                          source_type))))))
+
+tbl6 <- tbl6 %>%
+  dplyr::mutate(source_type = ifelse(source_type == "Specialized study", params$text$"table 5 source type 1",
+                                     ifelse(source_type == "Census", params$text$"table 5 source type 2",
+                                            ifelse(source_type == "Survey", params$text$"table 5 source type 3",
+                                                   ifelse(source_type == "Miscellaneous", params$text$"table 5 source type 4",
+                                                           ifelse(source_type == "CRVS", params$text$"table 5 source type 5", source_type))))))
+tbl6 <- tbl6 %>%
+  dplyr::mutate(include_reason = ifelse(include_reason == "CRVS overlaps with spec. study", params$text$"table 4 reason for exclusion values 1",
+                                        ifelse(include_reason == "Quality of census measurement not clear", params$text$"table 4 reason for exclusion values 2",
+                                               ifelse(include_reason == "PM could not be obtained", params$text$"table 4 reason for exclusion values 3",
+                                                       ifelse(include_reason == "Start date before 1985", params$text$"table 4 reason for exclusion values 4",
+                                                              ifelse(include_reason == "Study not nationally representative", params$text$"table 4 reason for exclusion values 5",
+                                                                     ifelse(include_reason == "End after last year in estimates", params$text$"table 4 reason for exclusion values 6",
+                                                                            ifelse(include_reason == "No information on maternal deaths", params$text$"table 4 reason for exclusion values 7",
+                                                                                  include_reason))))))))
+
+tbl6 <- tbl6 %>%
+  dplyr::relocate(period,
+                  source,
+                  source_type,
+                  include_reason) %>%
+  dplyr::arrange(period)
+
+if (nrow(tbl6) > 0) {
+kableExtra::kbl(tbl6,
+                booktabs = T,
+                escape = FALSE,
+                                align = align_headers,
+                caption = params$text$"table 6 title",
+                col.names = c(paste0(params$text$"table 6 column names 1", kableExtra::footnote_marker_symbol(1)),
+                              params$text$"table 6 column names 2",
+                              params$text$"table 6 column names 3",
+                              params$text$"table 6 column names 4"
+                ),
+               
+                longtable = T) %>%
+  kableExtra::kable_styling() %>%
+  kableExtra::kable_styling(latex_options = c("scale_down", "striped", "HOLD_position", "repeat_header")) %>%
+  kableExtra::footnote(symbol = c(sym_period), escape = FALSE, threeparttable = T) %>%
+  kableExtra::column_spec(1, width = "1in") %>%
+  kableExtra::column_spec(2, width = "3in") 
+}
+```
+`r if(nrow(tbl6) == 0 & lang == "English"){"No data excluded"}`
+`r if(nrow(tbl6) == 0 & lang == "Spanish"){"No datos excluidos"}`
+`r if(nrow(tbl6) == 0 & lang == "French"){"Aucune donnée exclue"}`
+
+\newpage
+<!-- predictor table -->
+# `r params$text$"table 7 title"`
+```{r echo=FALSE ,message=FALSE, warning=FALSE}
+tbl_preds <- tibble::tibble(
+  year = meta$year.t %>% as.vector(),
+  gdp = round(exp(meta$logGDP.ct) %>% as.vector()),
+  gfr = round(meta$gfr.ct %>% as.vector() * 1000),
+  sab = round(meta$sab.ct %>% as.vector() * 100)
+) %>%
+  dplyr::filter(year %in% table1_years) %>%
+  as.data.frame()
+
+
+star <- params$text$"gdp 2" #states that gdp is smoothed
+a <- params$text$"reference gdp"
+b <- params$text$"reference gfr" 
+c <- params$text$"reference sba"
+
+if (nrow(tbl_preds) > 0) {
+kableExtra::kbl(tbl_preds,
+                booktabs = T,
+                                align = align_headers,
+                escape = FALSE,
+                caption = params$text$"table 7 title",
+                col.names = kableExtra::linebreak(c(
+                              paste0(params$text$"table 7 column names 1"),
+                              paste0("GDP", kableExtra::footnote_marker_alphabet(1), kableExtra::footnote_marker_symbol(1), "\n", params$text$"table 7 column names 2 denomination"),
+                              paste0("GFR", kableExtra::footnote_marker_alphabet(2), "\n ", params$text$"table 7 column names 3 denomination"),
+                              paste0("SBA", kableExtra::footnote_marker_alphabet(3), "\n ", params$text$"table 7 column names 4 denomination")
+                ),
+                align = align_headers),
+                longtable = T) %>%
+  kableExtra::kable_styling() %>%
+  kableExtra::kable_styling(latex_options = c("striped", "HOLD_position"), font_size = 7) %>%
+  kableExtra::footnote(symbol = c(star), alphabet = c(a,b,c), escape = FALSE, threeparttable = T)
+}
+```
+`r if(nrow(tbl_preds) == 0 & lang == "English"){"No data available"}`
+`r if(nrow(tbl_preds) == 0 & lang == "Spanish"){"Datos no disponibles"}`
+`r if(nrow(tbl_preds) == 0 & lang == "French"){"Pas de données disponibles"}`
+
+<!-- page 7 plot -->
+\newpage
+# `r params$text$"section plot title"`
+`r params$text$"Plot caption"`
+
+```{r echo=FALSE ,message=FALSE, warning=FALSE, fig.width=11,fig.height=3.75}
+# fig.height = 4, fig.width = 8 #can be added to r chunk to change size of plot
+# Please note that PM is preferred over MMR and the described calculations were conducted using maternal deaths derived from the PM when possible.
+# devtools::load_all()
+bmat:::plot_bmat_onecountry(
+  round_name =  round_name_profile,
+  iso_alpha_3_code = iso_alpha_3_code,
+  estimates_to_compare = NULL, #readRDS(here::here("test/la1_estimates.rds"))
+  year_range = c(min(table1_years), max(table1_years))
+)
+```
+
+\newpage
+
+```{r echo=FALSE ,message=FALSE, warning=FALSE}
+#  determining if this is a country with crisis years, code below on runs if country has crisis
+has_crisis <- length(meta$crisis_years.c[[1]]) > 0 & any(meta$crisis_years.c[[1]] > 2000)
+```
+
+
+```{r conditional_block, echo=FALSE, results='asis', eval=has_crisis}
+cat("#" , params$text$"table crisis title")
+```
+
+```{r conditional_block2, echo=FALSE, results='asis', eval=has_crisis}
+cat(params$text$"section crisis notes")
+```
+
+```{r conditional_block3, echo=FALSE ,message=FALSE, warning=FALSE, eval=has_crisis}
+if (has_crisis) {
+  crisis_years <-meta$crisis_years.c[[1]]
+  matrix <- matrix_ct_to_df(matrix = meta$crisisdeaths.ct, C = meta$C, value_name = "value")
+  isos <- meta$iso.c
+  yearst <- meta$year.t
+  iso_df <- data.frame(c = 1:length(isos), iso_alpha_3_code = isos)
+  years_df <- data.frame(t = 1:length(yearst), year = yearst)
+  value_df <- matrix %>%
+    dplyr::left_join(years_df, by = c("t")) %>%
+    dplyr::left_join(iso_df, by = c("c")) %>%
+    dplyr::mutate(iso_alpha_3_code = as.character(iso_alpha_3_code))
+  value_df <- value_df %>%
+    dplyr::select(year, value) %>%
+    dplyr::filter(value > 0) %>%
+    dplyr::filter(year %in% crisis_years) %>%
+    dplyr::mutate(value = round(value))
+  a <- params$text$"reference mortality"
+  kableExtra::kbl(value_df,
+                  booktabs = T,
+                                  align = align_headers,
+                  caption = params$text$"table crisis title",
+                  col.names = kableExtra::linebreak(c(
+                                params$text$"table crisis column 1",
+                                paste0(params$text$"table crisis column 2", kableExtra::footnote_marker_alphabet(1), "\n ", params$text$"table crisis column 2 denominator") #replace denominator with paste(\n, text$variable)
+                  ),
+                  align = align_headers),
+                  escape = FALSE,
+                  longtable = T) %>%
+    kableExtra::kable_styling(latex_options = c("striped", "HOLD_position", "repeat_header")) %>%
+    kableExtra::footnote(alphabet = c(a), escape = FALSE, threeparttable = T) %>%
+  kableExtra::column_spec(1:2, width = "2in") 
+}
+```

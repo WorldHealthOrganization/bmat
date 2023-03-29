@@ -1,0 +1,24 @@
+---
+title: "packages"
+output: html_document
+---
+
+```{r}
+install.packages(
+  c("magrittr",
+    "R.utils",
+    "devtools",
+    "truncnorm",
+    "here",
+    "readstata13",
+    "readxl",
+    "tibble",
+    "tidyr",
+    'tidybayes',
+    "tolerance",
+    "dplyr"
+),
+  dependencies = TRUE
+)
+```
+

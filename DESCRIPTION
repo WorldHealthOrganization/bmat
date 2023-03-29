@@ -1,11 +1,13 @@
 Package: bmat
-Type: R Package
-Title: bmat
-Version: 1.0.0
-Authors@R: c(person("Gregory", "Guranich", email = "gguranic@umass.edu", role = c("aut")),
-             person("Emily", "Peterson", email = "emily.nancy.peterson@emory.edu", role = c("aut")),
-             person("Leontine", "Alkema", email = "lalkema@umass.edu", role = c("aut")))
-Description: BMat and BMis, maternal mortality estimation.
+Title: What the Package Does (One Line, Title Case)
+Version: 0.0.0.9000
+Authors@R:
+    person(given = "First",
+           family = "Last",
+           role = c("aut", "cre"),
+           email = "first.last@example.com",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: What the package does (one paragraph).
 License: What license it uses
 Encoding: UTF-8
 LazyData: true
