@@ -64,9 +64,9 @@ without iterative installation.
 ## Data inputs
 
 The data for the use cases can be found here
-[bmat/data-raw/](https://github.com/AlkemaLab/bmat/tree/master/data-raw/meta.csv).
+[bmat/data-raw/](https://github.com/WorldHealthOrganization/bmat/tree/master/data-raw).
 A meta file describing the data for use cases can be found here.
-[bmat/data-raw/meta.csv](https://github.com/AlkemaLab/bmat/tree/master/data-raw/meta.csv).
+[bmat/data-raw/meta_data_bmat_gather.xlsx](https://github.com/WorldHealthOrganization/bmat/blob/master/data-raw/meta_data_bmat_gather.xlsx).
 For more detailed information about the data used please refer to the
 WHO report, Trends in maternal mortality: 2000 to 2020. Geneva: WHO,
 UNICEF, UNFPA and The World Bank; 2023.
@@ -79,14 +79,14 @@ UNICEF, UNFPA and The World Bank; 2023.
 
 To produce one country estimates which are based on the latest fixed
 global estimates, refer to the following vignette
-[bmat/vignettes/0_fit_one_country.R](https://github.com/AlkemaLab/bmat/tree/master/vignettes)
+[bmat/vignettes/0_fit_one_country.R](https://github.com/WorldHealthOrganization/bmat/blob/master/vignettes/0_fit_one_country.R)
 
 #### Case 2. Full estimation process
 
 For the full process of producing estimates for all countries from start
 to finish, run the following vignettes in order. Vignettes can be found
 here
-[bmat/vignettes/](https://github.com/AlkemaLab/bmat/tree/master/vignettes).
+[bmat/vignettes/](https://github.com/WorldHealthOrganization/bmat/tree/master/vignettes).
 The second and third use case are computationally intensive when using
 settings that are beyond that of a test run. This will generally require
 server computation.
