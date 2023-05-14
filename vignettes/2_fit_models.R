@@ -17,6 +17,7 @@
 # variable should stay set to FALSE unless you are running this code on a server.
 devtools::load_all()
 round_name <- "test"
+round_name_of_global_reference <- "estimates_12-19-22"
 round_first_year <- 1985
 round_last_year <- 2020
 run_length <- "test"
@@ -145,7 +146,7 @@ fit_bmat(
 # cause input1.ct[1,1] errors.
 if(run_length == "test") {
   estimates_fixed_from_global_bmat = readRDS(
-    here::here("default", "estimates_fixed_from_global.rds"))
+    here::here("default",  round_name_of_global_reference, "bmat_global", "estimates_fixed_from_global.rds"))
 } else {
   estimates_fixed_from_global_bmat = readRDS(
     here::here("output", round_name, "bmat_global", "estimates_fixed_from_global.rds"))

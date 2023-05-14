@@ -50,7 +50,7 @@ text <- readxl::read_excel(here::here("data-raw", "countryprofile_translation.xl
 meta <-  readRDS(
   here::here("output", round_name_update, "meta.rds")
 )
-iso_alpha_3_codes <- "LAO"#meta$iso.c
+iso_alpha_3_codes <- meta$iso.c
 
 # Territory data
 territory_info <- read.csv( 
