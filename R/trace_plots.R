@@ -1,9 +1,7 @@
 trace_plots <- function(fit,
                         main_path,
-                        hyperpars_to_plot,
-                        global_run
+                        hyperpars_to_plot
 ) {
-  if(global_run) {
     summ <- MCMCvis::MCMCsummary(fit, params = hyperpars_to_plot) %>% 
       tibble::rownames_to_column(var = "pars")
     
@@ -21,9 +19,7 @@ trace_plots <- function(fit,
                        post_zm = TRUE,
                        open_pdf = FALSE,
                        Rhat = TRUE,
-                       filename = "mcmc_trace.pdf",
+                       filename = "diagnostic_trace_plot.pdf",
                        wd = main_path
     )
- 
-  }
 } # end function

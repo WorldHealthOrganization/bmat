@@ -110,21 +110,28 @@ fit_bmis <- function(
   )
   saveRDS(jags_fit, here::here(main_path, "jags_fit.rds"))
   
-  trace_plots(jags_fit,
-              main_path,
-              hyperpars_to_plot =  c(
-                "etaworld.k",
-                "sensworld",
-                "specworld",
-                "rho.alphabeta",
-                "rho_world",
-                "sigma.alpha",
-                "sigmaworld1",
-                "sigma.beta",
-                "sigmaworld2"
-              ),
-              global_run = global_run
-  )
+  if(global_run){
+    hyperpars_to_plot <-  c(
+      "etaworld.k",
+      "sensworld",
+      "specworld",
+      "rho.alphabeta",
+      "rho_world",
+      "sigma.alpha",
+      "sigmaworld1",
+      "sigma.beta",
+      "sigmaworld2"
+    )
+  } else{
+    hyperpars_to_plot <-  c(
+      "gamma.ctb",
+      "gamma.truematvr.ct"
+    )
+  }
+  # trace_plots(jags_fit,
+  #             main_path,
+  #             hyperpars_to_plot = hyperpars_to_plot
+  # )
   
   # jags_fit <- readRDS(here::here(main_path, "jags_fit.rds"))
   estimates <- calculate_bmis(
