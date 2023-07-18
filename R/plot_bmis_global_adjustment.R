@@ -24,8 +24,6 @@ plot_bmis_global_adjustment <- function(round_name,
       ggplot2::ylab("CRVS adjustment") +
       ggplot2::xlab("True PM") + 
       ggplot2::scale_color_discrete(name = "Specificity")
-    png(here::here("output", round_name, "bmis_global", "crvs_adjustment.png"), width = 1000, height = 1000)
-    pl
-    dev.off()
-  } 
+    return(pl)
+    }
 }

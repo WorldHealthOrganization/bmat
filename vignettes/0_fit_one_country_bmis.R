@@ -120,13 +120,17 @@ main_data_for_plots <-
 sens_spec <-
   readRDS(here::here("output", round_name, "bmis_onecountry", "sens_spec_countries_w_data.rds")) %>%
   dplyr::filter(iso_alpha_3_code == selected_country_iso)
-plot <- bmat:::plot_bmis_one_country(
+country_ref <- read.csv(
+  here::here("output", round_name, "country_ref.csv")
+)
+plot <- plot_bmis_one_country(
+  country_ref = country_ref,
   estimates = estimates,
   estimates_old = NULL,
   sens_spec = sens_spec,
   main_data_for_plots = main_data_for_plots,
   iso_alpha_3_code = selected_country_iso
-)  
+) 
 plot
 ##########################################################################################################
 

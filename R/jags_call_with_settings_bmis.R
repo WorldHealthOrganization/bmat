@@ -34,7 +34,6 @@ jags_call_with_settings <- function(jags_list,
 
     fit[names(fit) %in% c("model")] <- NA
     fit$BUGSoutput[names(fit$BUGSoutput) %in% c("sims.list",
-                                                "summary",
                                                 "mean",
                                                 "sd")] <- NA
     ############################################################################################################
@@ -65,7 +64,6 @@ jags_call_with_settings <- function(jags_list,
     
     fit[names(fit) %in% c("model")] <- NA
     fit$BUGSoutput[names(fit$BUGSoutput) %in% c("sims.list",
-                                                "summary",
                                                 "mean",
                                                 "sd")] <- NA
     ############################################################################################################

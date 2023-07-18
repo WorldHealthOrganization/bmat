@@ -39,6 +39,7 @@ meta_precrisis <-  readRDS(here::here("output", round_name, "meta_precrisis.rds"
 census <- read.csv(here::here("output", round_name, "census.csv"))
 survey <- read.csv(here::here("output", round_name, "survey.csv"))
 miscellaneous <- read.csv(here::here("output", round_name, "miscellaneous.csv"))
+country_ref <- read.csv(here::here("output", round_name, "country_ref.csv"))
 ##########################################################################################################
 
 
@@ -88,8 +89,31 @@ for (iso_alpha_3_code in iso_alpha_3_codes) {
     server = server
   )
 }
+# Plot file with the estimates from each country run
+pdf(here::here("output", round_name, "bmis_estimate_plots.pdf"))
+for (selected_country_iso in iso_alpha_3_codes){
+  estimates <- readRDS(here::here("output", round_name, "bmis_onecountry", selected_country_iso, "estimates.rds"))
+  main_data_for_plots <-
+    readRDS(here::here("output", round_name, "bmis_onecountry", selected_country_iso, "main_data_for_plots.rds"))
+  sens_spec <-
+    readRDS(here::here("output", round_name, "bmis_onecountry", "sens_spec_countries_w_data.rds")) %>%
+    dplyr::filter(iso_alpha_3_code == selected_country_iso)
+  print(plot_bmis_one_country(
+    country_ref = country_ref,
+    estimates = estimates,
+    estimates_old = NULL,
+    sens_spec = sens_spec,
+    main_data_for_plots = main_data_for_plots,
+    iso_alpha_3_code = selected_country_iso
+  ) )
+}
+dev.off()
+pdf(here::here("output", round_name, "bmis_global_crvs_adjustment.pdf"))
+plot_bmis_global_adjustment(round_name,
+                            round_last_year,
+                            global_run = TRUE)
+dev.off()
 ##########################################################################################################
-
 
 
 ##########################################################################################################

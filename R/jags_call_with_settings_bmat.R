@@ -50,7 +50,6 @@ jags_call_with_settings_bmat <- function(global_run,
       
       mod[names(mod) %in% c("model")] <- NA
       mod$BUGSoutput[names(mod$BUGSoutput) %in% c("sims.list",
-                                                  "summary",
                                                   "mean",
                                                   "sd")] <- NA
       saveRDS(mod, here::here(file.path(main_path, paste0(chain, "chain.rds"))))
@@ -80,7 +79,6 @@ jags_call_with_settings_bmat <- function(global_run,
     # process_hyper(jags_list = jagslist, fit = mod)
     mod[names(mod) %in% c("model")] <- NA
     mod$BUGSoutput[names(mod$BUGSoutput) %in% c("sims.list",
-                                                "summary",
                                                 "mean",
                                                 "sd")] <- NA
   }
