@@ -205,7 +205,6 @@ newestimates <- dplyr::bind_rows(dl) %>%
   dplyr::mutate(estimate_version = round_name)
 # Save the resulting data frame which contains all country estimates.
 write.csv(newestimates, here::here("output", round_name, "estimates.csv"), row.names = FALSE)
-##########################################################################################################
 dl <- list()
 for(iso in iso_alpha_3_codes) {
   main_path <- make_output_directory_return_path(round_name, iso, FALSE, bmis_or_bmat = "bmat")
@@ -216,5 +215,40 @@ newestimatesarr <- dplyr::bind_rows(dl) %>%
   dplyr::mutate(estimate_version = round_name)
 # Save the resulting data frame which contains all country estimates.
 write.csv(newestimatesarr, here::here("output", round_name, "estimates_arr.csv"), row.names = FALSE)
+
+
+
+
+##########################################################################################################
+##########################       target setting      #####################################################
+##########################################################################################################
+devtools::load_all()
+round_name <- "estimates_12-19-22"
+round_first_year <- 1985
+round_last_year <- 2020
+
+country_ref = read.csv(
+  here::here("output", round_name, "country_ref.csv")
+)
+newestimates <- read.csv(here::here("output", round_name, "estimates.csv"))
+
+group_data_wpp <- readxl::read_excel(here::here("data-raw", "country_territory_data", "territory_groups_for_report", "WPP_territory.xlsx"), skip = 0, sheet = 2)
+group_data_wpp <- group_data_wpp %>%
+  dplyr::filter(LocTypeName == "Country/Area") %>%
+  dplyr::select(iso_alpha_3_code = ISO3_Code,
+                SDG_Region = SDGRegName,
+                SDG_Sub_Region = SubRegName) 
+
+# SDG_Region
+group_data <- group_data_wpp %>%
+  dplyr::select(iso_alpha_3_code, SDG_Region)
+# SDG_Sub_Region
+group_data_sub <- group_data_wpp %>%
+  dplyr::select(iso_alpha_3_code, SDG_Sub_Region)
+country_ref <- country_ref %>%
+  dplyr::left_join(group_data) %>%
+  dplyr::left_join(group_data_sub)
+target_table(newestimates, country_ref)
+##########################################################################################################
 
 

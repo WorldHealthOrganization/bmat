@@ -39,7 +39,7 @@ round_name <- "test_onecountry"
 round_name_of_global_reference <- "estimates_12-19-22"
 round_first_year <- 1985
 round_last_year <- 2020
-selected_country_iso <- "BRA"
+selected_country_iso <- "AUT"
 run_length <- "test"
 server <- FALSE
 ##########################################################################################################

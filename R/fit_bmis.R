@@ -128,12 +128,16 @@ fit_bmis <- function(
       "gamma.truematvr.ct"
     )
   }
-  # trace_plots(jags_fit,
-  #             main_path,
-  #             hyperpars_to_plot = hyperpars_to_plot
-  # )
   
-  # jags_fit <- readRDS(here::here(main_path, "jags_fit.rds"))
+
+  trace_plots(jags_fit,
+              round_name,
+              main_path,
+              hyperpars_to_plot = hyperpars_to_plot,
+              jags_list = jags_list,
+              global_run = global_run
+  )
+  
   estimates <- calculate_bmis(
     jags_fit = jags_fit,
     percentiles = percentiles,
