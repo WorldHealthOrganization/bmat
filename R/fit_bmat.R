@@ -94,19 +94,28 @@ fit_bmat <- function(main_data = main_data,
     saveRDS(fit, here::here(file.path(main_path, "fit.rds")))
     
     if(global_run) {
-    trace_plots(jags_fit,
+      hyperpars_to_plot = c("phi",
+        "sqrtgamma0", "sigma.lambda",
+        "beta.h", 
+        "nonsamplingdhs.se","nonsamplingnondhs.se",
+        "sigma.country", "sigma.region", "alpha.world", "alpha.r")
+    } else {
+      hyperpars_to_plot = c(
+        "arma.ct",
+        "alpha.c",
+        "mu.ct"
+      )
+    }
+    trace_plots(fit,
                 round_name,
                 main_path,
-                hyperpars_to_plot = 
-                  c("phi",
-                    "sqrtgamma0", "sigma.lambda",
-                    "beta.h", 
-                    "nonsamplingdhs.se","nonsamplingnondhs.se",
-                    "sigma.country", "sigma.region", "alpha.world"), #"alpha.r")
+                hyperpars_to_plot = hyperpars_to_plot,
                 jags_list = jags_list,
-                global_run = global_run
+                global_run = global_run,
+                iso_alpha_3_code,
+                which = "BMat"
     )
-    }
+    
     
     estimates <- calculate_bmat(
       fit = fit,

@@ -23,6 +23,8 @@ process_mortality <- function(meta, mortality, mortality_to_denominate_hiv, mort
         crisisdeaths_covid.ct[c_index,t] <- sum(mortality$crisis_deaths_COVID19[select])
       }
     }}
+  
+  a.ct <- ifelse(is.na(a.ct), 0 , a.ct)
   # NAs are result of current hack to
   
   # meta_precrisis$a.ct[which(is.na(meta_precrisis$a.ct),  arr.ind = TRUE)] <- 0

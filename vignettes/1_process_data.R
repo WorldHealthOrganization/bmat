@@ -86,10 +86,13 @@ process_precrisis_meta(
   mortality_to_denominate_hiv = read.csv( 
     here::here("data-raw", "auxiliary_data", "mortality_WPP_2019.xx.xx.csv")) %>%
     dplyr::rename(iso_alpha_3_code = iso3),
-  births_gfr_data = read.csv(
-    here::here("data-raw", "auxiliary_data", "births_and_fertility_WPP_2022.06.21.csv")) %>%
+  births_gfr_data = readxl::read_excel(
+    here::here("data-raw", "auxiliary_data", "births_and_fertility_WPP_2022.06.21_v2.xlsx"),
+    sheet = 1,
+    guess_max = 10000) %>%
     dplyr::rename(iso_alpha_3_code = ISO3_code) %>%
-    dplyr::mutate(GFR = as.numeric(GFR)),
+    dplyr::mutate(GFR = as.numeric(GFR)/1000) %>%
+    dplyr::mutate(Births = Births/1000),
   mortality_hiv = read.csv(
     here::here("data-raw", "auxiliary_data", "mortality_hiv_UNAIDS_2021.07.30.csv")),
   gdp_data = readxl::read_excel(
@@ -99,7 +102,7 @@ process_precrisis_meta(
   ) %>%
     dplyr::rename(iso_alpha_3_code = "Country Code"),
   sab_data = read.csv(
-    here::here("data-raw/auxiliary_data/sab_MMEIG_2022.07.08.csv")) %>% 
+    here::here("data-raw/auxiliary_data/sab_MMEIG_2023.08.28_small_states.csv")) %>% 
     dplyr::mutate(year = floor(year)) %>%
     dplyr::filter(year >= round_first_year) %>% 
     dplyr::filter(year <= round_last_year),

@@ -1,4 +1,58 @@
+plot_bmis <- function(round_name, round_last_year, iso_alpha_3_codes) {
+  pdf(here::here("output", round_name, "bmis_estimate_plots.pdf"))
+  for (selected_country_iso in iso_alpha_3_codes){
+    estimates <- readRDS(here::here("output", round_name, "bmis_onecountry", selected_country_iso, "estimates.rds"))
+    main_data_for_plots <-
+      readRDS(here::here("output", round_name, "bmis_onecountry", selected_country_iso, "main_data_for_plots.rds"))
+    sens_spec <-
+      readRDS(here::here("output", round_name, "bmis_onecountry", "sens_spec_countries_w_data.rds")) %>%
+      dplyr::filter(iso_alpha_3_code == selected_country_iso)
+    print(plot_bmis_one_country(
+      country_ref = country_ref,
+      estimates = estimates,
+      estimates_old = NULL,
+      sens_spec = sens_spec,
+      main_data_for_plots = main_data_for_plots,
+      iso_alpha_3_code = selected_country_iso
+    ) )
+  }
+  dev.off()
+  pdf(here::here("output", round_name, "bmis_global_crvs_adjustment.pdf"))
+  print(plot_bmis_global_adjustment(round_name,
+                                    round_last_year,
+                                    global_run = TRUE))
+  dev.off()
+}
 
+plot_bmis_global_adjustment <- function(round_name,
+                                        round_last_year,
+                                        global_run = TRUE) {
+  if (global_run) {
+    sens_spec_global <- readRDS(here::here("output", round_name, "bmis_global", "sens_spec_global.rds"))
+    global_sens <- sens_spec_global %>% dplyr::filter(year_start == round_last_year) %>% dplyr::pull(sens)
+    truepm_vec <- seq(0,0.05,0.0001)
+    lengthpm <- length(truepm_vec)
+    spec_vec <- rep(1,lengthpm)
+    spec_vec2 <- rep(.9999,lengthpm)
+    spec_vec3 <- rep(.9993,lengthpm)
+    spec_vec4 <- rep(.999,lengthpm)
+    temp <- data.frame(truepm = rep(truepm_vec,4), 
+                       spec = c(spec_vec, spec_vec2, spec_vec3, spec_vec4),
+                       sens = rep(global_sens, lengthpm*4)) %>%
+      dplyr::mutate(adjustment = truepm / (truepm*sens + (1-spec)*(1-truepm))) %>%
+      dplyr::filter(truepm > .001) %>%
+      dplyr::filter(adjustment > 1.1)
+    #truepm / (truepm*sens + (1-spec)*(1-truepm))
+    pl <- ggplot2::ggplot(temp, ggplot2::aes(x=truepm, y=adjustment, col =as.factor(spec))) +
+      ggplot2::geom_line(size=1) +
+      ggplot2::ylim(1, max(temp$adjustment + .1)) +
+      ggplot2::theme_gray(base_size = 20) +
+      ggplot2::ylab("CRVS adjustment") +
+      ggplot2::xlab("True PM") + 
+      ggplot2::scale_color_discrete(name = "Specificity")
+    return(pl)
+  }
+}
 
 
 plot_bmis_one_country <- function(

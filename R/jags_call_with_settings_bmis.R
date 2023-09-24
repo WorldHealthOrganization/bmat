@@ -32,7 +32,7 @@ jags_call_with_settings <- function(jags_list,
     i = 1 # index for which update
     ########### REMOVING SOME DATA FROM FIT OBJECT TO REDUCE FILE SIZE ####################################
 
-    fit[names(fit) %in% c("model")] <- NA
+    # fit[names(fit) %in% c("model")] <- NA
     fit$BUGSoutput[names(fit$BUGSoutput) %in% c("sims.list",
                                                 "mean",
                                                 "sd")] <- NA
@@ -62,7 +62,7 @@ jags_call_with_settings <- function(jags_list,
 
     ########### REMOVING SOME DATA FROM FIT OBJECT TO REDUCE FILE SIZE ####################################
     
-    fit[names(fit) %in% c("model")] <- NA
+    # fit[names(fit) %in% c("model")] <- NA
     fit$BUGSoutput[names(fit$BUGSoutput) %in% c("sims.list",
                                                 "mean",
                                                 "sd")] <- NA

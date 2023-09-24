@@ -89,31 +89,10 @@ for (iso_alpha_3_code in iso_alpha_3_codes) {
     server = server
   )
 }
-# Plot file with the estimates from each country run
-pdf(here::here("output", round_name, "bmis_estimate_plots.pdf"))
-for (selected_country_iso in iso_alpha_3_codes){
-  estimates <- readRDS(here::here("output", round_name, "bmis_onecountry", selected_country_iso, "estimates.rds"))
-  main_data_for_plots <-
-    readRDS(here::here("output", round_name, "bmis_onecountry", selected_country_iso, "main_data_for_plots.rds"))
-  sens_spec <-
-    readRDS(here::here("output", round_name, "bmis_onecountry", "sens_spec_countries_w_data.rds")) %>%
-    dplyr::filter(iso_alpha_3_code == selected_country_iso)
-  print(plot_bmis_one_country(
-    country_ref = country_ref,
-    estimates = estimates,
-    estimates_old = NULL,
-    sens_spec = sens_spec,
-    main_data_for_plots = main_data_for_plots,
-    iso_alpha_3_code = selected_country_iso
-  ) )
-}
-dev.off()
-pdf(here::here("output", round_name, "bmis_global_crvs_adjustment.pdf"))
-plot_bmis_global_adjustment(round_name,
-                            round_last_year,
-                            global_run = TRUE)
-dev.off()
+# Produces one country plots and the global adjustment plot
+plot_bmis(round_name, round_last_year, iso_alpha_3_codes)
 ##########################################################################################################
+
 
 
 ##########################################################################################################
@@ -194,44 +173,17 @@ for (iso_alpha_3_code in iso_alpha_3_codes) {
     arr_periods= list(c(2000,2015), c(2000, 2020), c(2010, 2020), c(2000, 2005), c(2005, 2010), c(2010, 2015), c(2015, 2020))
   )
 }
-# For each country read in data and add the data object to a single list
-dl <- list()
-for(iso in iso_alpha_3_codes) {
-  main_path <- make_output_directory_return_path(round_name, iso, FALSE, bmis_or_bmat = "bmat")
-  dl[[iso]] <- readRDS(here::here(main_path, "estimates.rds"))
-}
-# Bind each data object to a single object
-newestimates <- dplyr::bind_rows(dl) %>%
-  dplyr::mutate(estimate_version = round_name)
-# Save the resulting data frame which contains all country estimates.
-write.csv(newestimates, here::here("output", round_name, "estimates.csv"), row.names = FALSE)
-dl <- list()
-for(iso in iso_alpha_3_codes) {
-  main_path <- make_output_directory_return_path(round_name, iso, FALSE, bmis_or_bmat = "bmat")
-  dl[[iso]] <- readRDS(here::here(main_path, "estimates_arr.rds")) 
-}
-# Bind each data object to a single object
-newestimatesarr <- dplyr::bind_rows(dl) %>%
-  dplyr::mutate(estimate_version = round_name)
-# Save the resulting data frame which contains all country estimates.
-write.csv(newestimatesarr, here::here("output", round_name, "estimates_arr.csv"), row.names = FALSE)
-
+# Produce all output (bind spreadsheets from one country runs, produce all plots etc)
+# add the input round_name_2 if you want plots to compare estimates and input data from the current round of estimation to the additionally supplied round of estimation
+bind_bmat_onecoutnry_output_produce_spreadsheets_and_plots(round_name, round_name_2 = NULL, meta, country_ref, iso_alpha_3_codes)
+##########################################################################################################
 
 
 
 ##########################################################################################################
 ##########################       target setting      #####################################################
 ##########################################################################################################
-devtools::load_all()
-round_name <- "estimates_12-19-22"
-round_first_year <- 1985
-round_last_year <- 2020
-
-country_ref = read.csv(
-  here::here("output", round_name, "country_ref.csv")
-)
 newestimates <- read.csv(here::here("output", round_name, "estimates.csv"))
-
 group_data_wpp <- readxl::read_excel(here::here("data-raw", "country_territory_data", "territory_groups_for_report", "WPP_territory.xlsx"), skip = 0, sheet = 2)
 group_data_wpp <- group_data_wpp %>%
   dplyr::filter(LocTypeName == "Country/Area") %>%

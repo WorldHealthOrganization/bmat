@@ -135,7 +135,9 @@ fit_bmis <- function(
               main_path,
               hyperpars_to_plot = hyperpars_to_plot,
               jags_list = jags_list,
-              global_run = global_run
+              global_run = global_run,
+              iso_alpha_3_code,
+              which = "BMis"
   )
   
   estimates <- calculate_bmis(
