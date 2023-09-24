@@ -159,6 +159,7 @@ process_vr_wrapper(
     here::here("data-raw", "dependent_data", "vital_registration_special_cases_MMEIG_2019.xx.xx.xlsx")),
   round_name = round_name
 ) 
+vr_completness_data_for_steakholders(vrdata = read.csv(here::here("output", round_name, "vrdata.csv")))
 ##########################################################################################################
 
 
