@@ -210,7 +210,7 @@ process_study_data(
 # Process and saves census data.
 process_census_data(
   census_data = readxl::read_xlsx(
-    here::here("data-raw", "dependent_data", "census_WHO_2021.12.xx.xlsx"), skip =1,  na = common_na_strings),
+    here::here("data-raw", "dependent_data", "census_WHO_2023.03.28.xlsx"), skip =1,  na = common_na_strings),
   meta =  readRDS(
     here::here("output", round_name, "meta.rds")),
   meta_precrisis =  readRDS(
