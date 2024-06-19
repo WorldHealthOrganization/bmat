@@ -26,7 +26,7 @@ temp2 <- main_data %>%
       "ynonmat_vr"
     )
   ) %>%
-  tidyr::unnest_wider(value) %>%
+  tidyr::unnest_wider(value, names_sep = "_") %>%
   dplyr::mutate(sum = rowSums(.[2:ncol(.)], na.rm = TRUE)) %>%
   dplyr::mutate(row_id = purrr::pmap(list(1:length(main_data), length(unique(name))), rep) %>% unlist) %>%
   dplyr::select(name, sum, row_id) %>%
@@ -74,3 +74,4 @@ main_data <- main_data %>%
                 tot_vr = ifelse(study_period_coverage == "none", NA, tot_vr))
 return(main_data)
 }
+

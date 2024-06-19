@@ -34,6 +34,7 @@
 ##########################       Create profiles Settings / Setup   ######################################
 ##########################################################################################################
 # The years and table years need to be edited each round.
+round_name <- "test"
 first_reporting_year <- 2000
 years <- paste0(first_reporting_year, "-", round_last_year)
 table1_years <- seq(first_reporting_year, round_last_year, 5)  
@@ -48,28 +49,33 @@ langs <- c("English", "Spanish", "French")
 text <- readxl::read_excel(here::here("data-raw", "countryprofile_translation.xlsx"))
 # Meta data
 meta <-  readRDS(
-  here::here("output", round_name_update, "meta.rds")
+  here::here("output", round_name, "meta.rds")
 )
-iso_alpha_3_codes <- "LAO"#meta$iso.c
-
+##########################################################################################################
+##########################################################################################################
+##########################################################################################################
+iso_alpha_3_codes <- meta$iso.c
+##########################################################################################################
+##########################################################################################################
+##########################################################################################################
 # Territory data
 territory_info <- read.csv( 
-  here::here("output", round_name_update, "country_ref.csv"), fileEncoding="latin1")
+  here::here("output", round_name, "country_ref.csv"), fileEncoding="latin1")
 whoregions <- territory_info$grp_who_region
-if (!dir.exists(here::here("output", round_name_update, "country_profile"))) dir.create(here::here("output", round_name_update, "country_profile"))
+if (!dir.exists(here::here("output", round_name, "country_profile"))) dir.create(here::here("output", round_name, "country_profile"))
 for (lang in langs) {
-  if (!dir.exists(here::here("output", round_name_update, "country_profile", lang))) dir.create(here::here("output", round_name_update, "country_profile", lang))
+  if (!dir.exists(here::here("output", round_name, "country_profile", lang))) dir.create(here::here("output", round_name, "country_profile", lang))
   for (whoregion in whoregions) {
-    if (!dir.exists(here::here("output", round_name_update, "country_profile", lang, whoregion))) dir.create(here::here("output", round_name_update, "country_profile", lang, whoregion))
+    if (!dir.exists(here::here("output", round_name, "country_profile", lang, whoregion))) dir.create(here::here("output", round_name, "country_profile", lang, whoregion))
   }
 }
 ##########################################################################################################
 # part of the hack to fix strings which the server / server excel read turned into factors and numbers
 main_data <- read.csv(
-  here::here("output", round_name_update, "main_data.csv")) 
+  here::here("output", round_name, "main_data.csv")) 
 
 # main_data_hack <- read.csv(
-#   here::here("output", round_name_update, "main_data.csv")) %>%
+#   here::here("output", round_name, "main_data.csv")) %>%
 #   dplyr::select(year_start, year_end, iso_alpha_3_code, type, include_reason, citation_short, final_pm) 
 
 ##########################################################################################################
@@ -100,7 +106,7 @@ for(lang in langs) {
       dplyr::pull(paste0(lang))
     
     
-    main_path <- make_output_directory_return_path(round_name_update, global_run = FALSE, iso = iso_alpha_3_code, bmis_or_bmat = "bmat")
+    main_path <- make_output_directory_return_path(round_name, global_run = FALSE, iso = iso_alpha_3_code, bmis_or_bmat = "bmat")
     df <- readRDS(here::here(main_path, 'main_data_adjusted.rds'))  %>%
       dplyr::mutate(period = paste0("[",round(year_start, 2),", ", round(year_end, 2), ")")) %>%
       dplyr::relocate(period) %>%
@@ -130,10 +136,10 @@ for(lang in langs) {
       dplyr::mutate(citation_short = gsub("&", "and", citation_short, perl=TRUE)) %>%
       dplyr::mutate(type = as.character(type))
     
-    round_name_profile <- round_name_update
+    round_name_profile <- round_name
     detach("package:kableExtra", unload=TRUE)
     rmarkdown::render(here::here("vignettes","country_profile.Rmd"), 
-                      output_file = here::here("output", round_name_update, "country_profile", lang, paste0(iso_alpha_3_code, ".pdf")),
+                      output_file = here::here("output", round_name, "country_profile", lang, paste0(iso_alpha_3_code, ".pdf")),
                       envir = environment(),
                       params = list(iso_alpha_3_code = iso_alpha_3_code,
                                     who_name = who_name,
@@ -162,8 +168,8 @@ for(lang in langs) {
       dplyr::filter(grp_who_region == whoregion) 
     
     for (iso_alpha_3_code in unique(ter_r$iso_alpha_3_code)) {
-      file.copy(from = here::here("output", round_name_update, "country_profile", lang, paste0(iso_alpha_3_code, ".pdf")),
-                to = here::here("output", round_name_update, "country_profile", lang, whoregion, paste0(iso_alpha_3_code, ".pdf")), overwrite = TRUE)
+      file.copy(from = here::here("output", round_name, "country_profile", lang, paste0(iso_alpha_3_code, ".pdf")),
+                to = here::here("output", round_name, "country_profile", lang, whoregion, paste0(iso_alpha_3_code, ".pdf")), overwrite = TRUE)
     }}}
 Sys.setlocale("LC_CTYPE", locale ="English.UTF-8")
 

@@ -48,9 +48,8 @@ jags_call_with_settings_bmat <- function(global_run,
       )
       ########### REMOVING SOME DATA FROM FIT OBJECT TO REDUCE FILE SIZE ####################################
       
-      mod[names(mod) %in% c("model")] <- NA
+      # mod[names(mod) %in% c("model")] <- NA
       mod$BUGSoutput[names(mod$BUGSoutput) %in% c("sims.list",
-                                                  "summary",
                                                   "mean",
                                                   "sd")] <- NA
       saveRDS(mod, here::here(file.path(main_path, paste0(chain, "chain.rds"))))
@@ -78,9 +77,8 @@ jags_call_with_settings_bmat <- function(global_run,
         envir = environment()
       )
     # process_hyper(jags_list = jagslist, fit = mod)
-    mod[names(mod) %in% c("model")] <- NA
+    # mod[names(mod) %in% c("model")] <- NA
     mod$BUGSoutput[names(mod$BUGSoutput) %in% c("sims.list",
-                                                "summary",
                                                 "mean",
                                                 "sd")] <- NA
   }
@@ -119,11 +117,11 @@ inits <- function(AddARMA = TRUE,  meta, global_run, estimates_fixed_from_global
     #                                             ))))
 
 
-    fixed <- readRDS(here::here("default", "estimates_fixed_from_global.rds"))
-    posterior_sd_of_alpha.c <- fixed$posterior_sd_of_alpha.c
-    posterior_sd_of_beta.h <- fixed$posterior_sd_of_beta.h
-    previous_beta.h <- fixed$beta.h
-    previous_alpha.c <-  fixed$alpha.c
+
+    posterior_sd_of_alpha.c <- estimates_fixed_from_global_bmat$posterior_sd_of_alpha.c
+    posterior_sd_of_beta.h <- estimates_fixed_from_global_bmat$posterior_sd_of_beta.h
+    previous_beta.h <- estimates_fixed_from_global_bmat$beta.h
+    previous_alpha.c <-  estimates_fixed_from_global_bmat$alpha.c
 
     beta.h <- c()
     for (h in 1:3) {
@@ -142,11 +140,25 @@ inits <- function(AddARMA = TRUE,  meta, global_run, estimates_fixed_from_global
     }
     initslist <- c(initslist, list(beta.h = beta.h, alpha.c = alpha.c))
   } else {
-    # No longer in use but here in case convergence is still an issue after this update if(iso_alpha_3_code != "GUY"){ # hack to be removed when convergence is patched 7/22/22gg
-    previous_alpha.c <-  estimates_fixed_from_global_bmat$alpha.c
-    # previous_beta.h <- estimates_fixed_from_global_bmat$beta.h
-    initslist <- c(initslist, list(alpha.c = previous_alpha.c[meta$c]))
-    # }
+    
+    posterior_sd_of_beta.h <- estimates_fixed_from_global_bmat$posterior_sd_of_beta.h
+    previous_beta.h <- estimates_fixed_from_global_bmat$beta.h
+    posterior_sd_of_alpha <- estimates_fixed_from_global_bmat$posterior_sd_of_alpha.c[meta$c]
+    previous_alpha <-  estimates_fixed_from_global_bmat$alpha.c[meta$c]
+    
+    beta.h <- c()
+    for (h in 1:3) {
+      beta.h[h] <- rnorm(1, mean = previous_beta.h[h], sd = 3*posterior_sd_of_beta.h[h])
+    }
+    betaz = min(
+      -(
+        -ifelse(c(meta$X.cth[1, , 1]) < 0, 1.1, 0.9) * beta.h[1] * c(meta$X.cth[1, , 1])
+        + ifelse(c(meta$X.cth[1, , 2]) < 0, 0.9, 1.1) * beta.h[2] * c(meta$X.cth[1, , 2])
+        - ifelse(c(meta$X.cth[1, , 3]) < 0, 1.1, 0.9) * beta.h[3] * c(meta$X.cth[1, , 3])
+      )
+    )
+    alpha.c <- truncnorm::rtruncnorm(1, a = previous_alpha - 3*posterior_sd_of_alpha, b = betaz, mean = previous_alpha, sd = 3*posterior_sd_of_alpha)
+    initslist <- c(initslist, list(alpha.c = alpha.c))
   }
   
   return(list(initslist))

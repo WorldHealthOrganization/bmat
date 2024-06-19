@@ -5,7 +5,7 @@ process_country_ref <- function(country_ref_who_custom,
 ){
   # historic custom WHO file with custom region categories
   country_ref_who_custom <- country_ref_who_custom %>%
-    dplyr::filter(in.study.15.new) %>% #those without lifetables excluded later
+    # dplyr::filter(in.study.15.new) %>% #those without lifetables excluded later
     dplyr::rename(iso_alpha_3_code = iso.code,
                   m49 = num.code,
                   who_code = whocode,
