@@ -110,36 +110,23 @@ fit_bmis <- function(
   )
   saveRDS(jags_fit, here::here(main_path, "jags_fit.rds"))
   
-  if(global_run){
-    hyperpars_to_plot <-  c(
-      "etaworld.k",
-      "sensworld",
-      "specworld",
-      "rho.alphabeta",
-      "rho_world",
-      "sigma.alpha",
-      "sigmaworld1",
-      "sigma.beta",
-      "sigmaworld2"
-    )
-  } else{
-    hyperpars_to_plot <-  c(
-      "gamma.ctb",
-      "gamma.truematvr.ct"
-    )
-  }
-  
-
   trace_plots(jags_fit,
-              round_name,
               main_path,
-              hyperpars_to_plot = hyperpars_to_plot,
-              jags_list = jags_list,
-              global_run = global_run,
-              iso_alpha_3_code,
-              which = "BMis"
+              hyperpars_to_plot =  c(
+                "etaworld.k",
+                "sensworld",
+                "specworld",
+                "rho.alphabeta",
+                "rho_world",
+                "sigma.alpha",
+                "sigmaworld1",
+                "sigma.beta",
+                "sigmaworld2"
+              ),
+              global_run = global_run
   )
   
+  # jags_fit <- readRDS(here::here(main_path, "jags_fit.rds"))
   estimates <- calculate_bmis(
     jags_fit = jags_fit,
     percentiles = percentiles,
@@ -154,6 +141,7 @@ fit_bmis <- function(
                              main_path = main_path)
   saveRDS(main_data_for_plots, here::here(main_path, "main_data_for_plots.rds"))
   
+
   calculate_sens_spec_wrapper(
     main_data_for_plots = main_data_for_plots,
     jags_fit = jags_fit,
@@ -165,12 +153,7 @@ fit_bmis <- function(
     iso_alpha_3_code = iso_alpha_3_code
   )
 
-  plot_bmis_global_adjustment(
-    round_name = round_name,
-    round_last_year = last_year,
-    global_run = global_run
-  )
-
+  
   print(paste0("Output files saved to ", main_path))
   print(paste0("Total time elapsed ", round(as.numeric((proc.time() - ptm)[3]
   )), " seconds."))

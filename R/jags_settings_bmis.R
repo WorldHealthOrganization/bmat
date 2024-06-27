@@ -1,6 +1,6 @@
 jags_settings_bmis <- function(run_setting) {
   if (run_setting == "test") {
-    n_chains = 2
+    n_chains = 1
     n_burnin = 2
     n_iter = 5
     n_thin = 1
