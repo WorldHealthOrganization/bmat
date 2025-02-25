@@ -6,6 +6,7 @@ process_country_ref <- function(country_ref_who_custom,
   # historic custom WHO file with custom region categories
   country_ref_who_custom <- country_ref_who_custom %>%
     # dplyr::filter(in.study.15.new) %>% #those without lifetables excluded later
+    dplyr::filter(`Countries to be included in the 2025 estimates`==TRUE) %>% 
     dplyr::rename(iso_alpha_3_code = iso.code,
                   m49 = num.code,
                   who_code = whocode,
@@ -22,7 +23,7 @@ process_country_ref <- function(country_ref_who_custom,
   
   # up to date WHO file with country names
   country_ref_who <- country_ref_who %>%
-    dplyr::filter(WHO_LEGAL_STATUS == "M" | CODE_ISO_3 %in% c("PRI", "PSE")) %>%
+    dplyr::filter(WHO_LEGAL_STATUS == "M" | CODE_ISO_3 %in% c("PRI", "PSE", "MAC")) %>%
     dplyr::select(
       iso_alpha_3_code = CODE_ISO_3,
       NAME_SHORT_EN,
@@ -43,7 +44,9 @@ process_country_ref <- function(country_ref_who_custom,
   
   country_ref <- country_ref_who_custom %>%
     dplyr::left_join(country_ref_who, by = "iso_alpha_3_code") %>%
-    dplyr::left_join(sdg_regions, by = "iso_alpha_3_code")
+    dplyr::left_join(sdg_regions, by = "iso_alpha_3_code")%>% 
+    dplyr::filter(iso_alpha_3_code!='NIU'&iso_alpha_3_code!='HKG') # [SA 2024/08/12]: for now, not estimating for NIU
+  print(paste("there are ", length(country_ref$iso_alpha_3_code), "countries in this country_ref file"))
   write.csv(country_ref, row.names = FALSE, here::here("output", round_name, "country_ref.csv"))
   print(paste("country ref file saved to ", here::here("output", round_name, "country_ref.csv")))
   

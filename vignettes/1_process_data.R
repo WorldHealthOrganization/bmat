@@ -19,7 +19,7 @@
 devtools::load_all()
 round_name <- "test"
 round_first_year <- 1985
-round_last_year <- 2020
+round_last_year <- 2023
 common_na_strings <- c("NA", "")
 # Create a directory based on the round name variable for all associated files to be saved.
 dir.create(here::here("output"))
@@ -37,9 +37,9 @@ file.copy(from = here::here("data-raw/countryprofile_translation.xlsx"),
 # Processes and saves a file which contains territory information e.g. iso codes, regional groupgins, etc.
 process_country_ref(
   country_ref_who_custom = readxl::read_excel(
-    here::here("data-raw/country_territory_data/WHO_REF_COUNTRY_MMEIG_REGIONS_2019.xx.xx.xlsx")),
+    here::here("data-raw/country_territory_data/WHO_REF_COUNTRY_MMEIG_REGIONS_2019Update 16 August 2024.xlsx")),
   country_ref_who = readxl::read_excel(
-    here::here("data-raw/country_territory_data/WHO_REF_COUNTRY_2021.09.xx.xlsx"), skip = 1),
+    here::here("data-raw/country_territory_data/WHO_REF_COUNTRY_2024.08.26.xlsx"), skip = 1),
   sdg_regions = read.csv(
     here::here("data-raw/country_territory_data/sdg_regions_historical.csv")),
   round_name = round_name
