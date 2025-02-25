@@ -28,11 +28,61 @@ process_precrisis_meta <- function(
     dplyr::filter(sex == 2) %>%
     dplyr::filter(year >= first_year) %>%
     dplyr::filter(year <= last_year)
-  mortality_to_denominate_hiv <- mortality_to_denominate_hiv %>%
-    dplyr::filter(age %in% seq(15,45,5)) %>%
-    dplyr::filter(sex == 2) %>%
-    dplyr::filter(year >= first_year) %>%
-    dplyr::filter(year <= last_year)
+  
+  # SA edit to add covidfree deaths to meta 
+  mortality2 = mortality %>%
+    dplyr::mutate(crisis_deaths = crisis_deaths_OtherCrises + crisis_deaths_Conflict) %>%
+    dplyr::mutate(sex=2) %>% dplyr::group_by(iso_alpha_3_code, year) %>% 
+    dplyr::summarise(deaths=sum(deaths),
+                     crisis_deaths=sum(crisis_deaths),
+                     crisis_deaths_COVID19=sum(crisis_deaths_COVID19), 
+                     adjust_COVID19_mortality= adjust_COVID19_mortality[1]) %>% 
+    dplyr::mutate(crisis_deaths_COVID19 = ifelse(crisis_deaths_COVID19 < 0, 0, crisis_deaths_COVID19),
+                  crisis_deaths = ifelse(crisis_deaths < 0, 0, crisis_deaths))
+  
+  covid_free_deaths <- mortality2 %>%
+    dplyr::group_by(iso_alpha_3_code) %>% 
+    dplyr::mutate(
+      covid_free_deaths = dplyr::case_when(
+        !adjust_COVID19_mortality ~ ifelse(
+          year %in% 2020:2022 & crisis_deaths_COVID19!=0,
+          NA_real_,  # Placeholder for interpolation
+          deaths
+        ),
+        TRUE ~ deaths - crisis_deaths_COVID19
+      )
+    ) %>%
+    dplyr::mutate(
+      # Interpolate for 2020-2022 where covid_free_deaths is NA
+      covid_free_deaths = ifelse(
+        !adjust_COVID19_mortality & is.na(covid_free_deaths),
+        approx(year[c(year %in% c(2019, 2023))],
+               deaths[c(year %in% c(2019, 2023))],
+               xout = year)$y,
+        covid_free_deaths
+      )
+    ) %>%
+    dplyr::ungroup() %>% 
+    dplyr::mutate(covid_deaths_imputed = ifelse(!adjust_COVID19_mortality & crisis_deaths_COVID19==0, 0,
+                                                ifelse(year %in% 2020:2022, deaths - covid_free_deaths, 0))) %>% 
+    dplyr::mutate(covid_deaths_imputed =  ifelse(covid_deaths_imputed<0, 0, covid_deaths_imputed))
+  
+  
+  ###[SA20240813: edit to impute HIV values where hiv prop >0.9]
+  
+  isos <- country_ref %>% 
+    dplyr::select(iso_alpha_3_code) %>% unique()
+  
+  
+  mortality_hiv <- mortality2 %>% 
+    dplyr::select(iso_alpha_3_code, year, deaths) %>% 
+    dplyr::right_join(mortality_hiv, by=c('iso_alpha_3_code', 'year')) %>% 
+    dplyr::filter(iso_alpha_3_code%in%isos$iso_alpha_3_code) %>% 
+    dplyr::mutate(deaths_hiv=prop*deaths) 
+  
+  
+  ## [end of SA20240813 edit]
+  
   # make a complete mortality hiv dataset (i.e. has all country years with NAs imputed as 0)
   mortality_hiv <- data.frame(iso_alpha_3_code = mortality$iso_alpha_3_code %>% unique, year = 1985) %>%
     tidyr::complete(tidyr::nesting(iso_alpha_3_code),
@@ -58,8 +108,8 @@ process_precrisis_meta <- function(
   # Step 1: Get the value we want to use for imputation (small state median gdp)
   small_isos <- births_gfr_data %>% dplyr::filter(Female1549*100 < 500000) %>% dplyr::pull(iso_alpha_3_code) %>% unique
   gdp_data <- gdp_data %>%
-    dplyr::select(dplyr::where(~ sum(is.na(.)) / nrow(gdp_data) <= .9)) %>% #drop those columns which are almost entirely missing / shouldnt even be in the excel
-    dplyr::select(-`WHO Ind`)
+    dplyr::select(dplyr::where(~ sum(is.na(.)) / nrow(gdp_data) <= .9))# %>% #drop those columns which are almost entirely missing / shouldnt even be in the excel
+   # dplyr::select(-`WHO Ind`)
   long_gdp <- gdp_data %>%
     tidyr::pivot_longer(cols = starts_with("YR"), names_to = "year", values_to = "gdp") %>%
     dplyr::mutate(year = as.numeric(stringr::str_extract(year, "\\d+"))) 
@@ -78,6 +128,7 @@ process_precrisis_meta <- function(
     dplyr::pull(iso_alpha_3_code) %>% 
     unique()
   missing_iso_codes <- setdiff(isos_with_wpp, isos_with_gdp)
+  missing_iso_codes <- isos$iso_alpha_3_code[which(isos$iso_alpha_3_code%in%missing_iso_codes)]
   print("The following countries required imputation of GDP: ")
   print(missing_iso_codes)
   
@@ -108,6 +159,7 @@ process_precrisis_meta <- function(
                          mortality = mortality,
                          mortality_to_denominate_hiv = mortality_to_denominate_hiv,
                          mortality_hiv =mortality_hiv,
+                         covid_free_deaths = covid_free_deaths,
                          isos_with_aux_data = isos_with_aux_data)
   
   # read_covariates and births

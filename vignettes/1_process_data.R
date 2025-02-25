@@ -56,7 +56,7 @@ process_fsi(
     here::here("output", round_name, "country_ref.csv")
     ),
   fsi <- readxl::read_excel(
-    here::here("data-raw", "country_territory_data", "territory_by_fsi", "fsi-2020.xlsx")
+    here::here("data-raw", "country_territory_data", "territory_by_fsi", "FSI-2023-DOWNLOAD.xlsx")
   ),
   namehack <- read.csv(
     here::here("data-raw", "country_territory_data", "territory_by_fsi", "fsi_custom_name_hack_for_coalesce.csv")
@@ -76,33 +76,28 @@ process_precrisis_meta(
     here::here("output", round_name, "country_ref.csv")
   ),
   mortality = read.csv(
-    here::here("data-raw", "auxiliary_data", "mortality_WPP_2022.06.21.csv")) %>%
+    here::here("data-raw", "auxiliary_data", "mortality_wpp24_crisisandlifetables.csv")) %>%
     dplyr::rename(iso_alpha_3_code = ISO3_code,
                   age = Age,
                   year = Year,
-                  pop = Population_Exposure) %>%
-    dplyr::mutate(crisis_deaths = crisis_deaths_OtherCrises + crisis_deaths_COVID19) %>%
-    dplyr::mutate(crisis_deaths = ifelse(crisis_deaths < 0, 0, crisis_deaths)),
-  mortality_to_denominate_hiv = read.csv( 
-    here::here("data-raw", "auxiliary_data", "mortality_WPP_2019.xx.xx.csv")) %>%
-    dplyr::rename(iso_alpha_3_code = iso3),
+                  pop = PopExposure,
+                  deaths=Deaths) %>%
+    dplyr::mutate(crisis_deaths = crisis_deaths_OtherCrises + crisis_deaths_Conflict) %>%
+    dplyr::mutate(crisis_deaths = ifelse(crisis_deaths < 0, 0, crisis_deaths)) %>% 
+    dplyr::mutate(sex=2),
   births_gfr_data = readxl::read_excel(
-    here::here("data-raw", "auxiliary_data", "births_and_fertility_WPP_2022.06.21_v2.xlsx"),
+    here::here("data-raw", "auxiliary_data", "WPP2024_Fertility_summary_MMEIG.xlsx"),
     sheet = 1,
-    guess_max = 10000) %>%
+    guess_max = 10000) %>% 
     dplyr::rename(iso_alpha_3_code = ISO3_code) %>%
-    dplyr::mutate(GFR = as.numeric(GFR)/1000) %>%
-    dplyr::mutate(Births = Births/1000),
+    dplyr::mutate(GFR = as.numeric(GFR)) %>%
+    dplyr::mutate(Births = Births/1000) %>% 
+    dplyr::mutate(Female1549 = Female1549),
   mortality_hiv = read.csv(
-    here::here("data-raw", "auxiliary_data", "mortality_hiv_UNAIDS_2021.07.30.csv")),
-  gdp_data = readxl::read_excel(
-    here::here("data-raw", "auxiliary_data", "gdp_WORLDBANK_2022.07.11.xlsx"),
-    sheet = 1,
-    skip = 4
-  ) %>%
-    dplyr::rename(iso_alpha_3_code = "Country Code"),
-  sab_data = read.csv(
-    here::here("data-raw/auxiliary_data/sab_MMEIG_2023.08.28_small_states.csv")) %>% 
+    here::here("data-raw", "auxiliary_data", "hiv_2024.csv")),
+  gdp_data = read.csv( here::here("data-raw", "auxiliary_data", "gdp_imputed_21092024.csv")),
+  sab_data = readxl::read_excel(
+    here::here("data-raw/auxiliary_data/estimates_base_0all_indicators_v2_sab_shared.xlsx")) %>% 
     dplyr::mutate(year = floor(year)) %>%
     dplyr::filter(year >= round_first_year) %>% 
     dplyr::filter(year <= round_last_year),
