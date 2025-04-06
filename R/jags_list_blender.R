@@ -9,7 +9,7 @@ jags_list_blender <- function(jags_list_m,
 
   B <- jags_list_central$B
   Tyears <- nyears <- jags_list_central$nyears
-  J <- 300#jags_list_central$nobs # just a observation number that is larger than the each subset of data. It's okay to have an array with larger dimensions since we only loop over certain observations in actual model
+  J <- 400#jags_list_central$nobs # just a observation number that is larger than the each subset of data. It's okay to have an array with larger dimensions since we only loop over certain observations in actual model
   startyear <- first_year
   indices_binary_measure <- indices_binary_measure()
   list2env(indices_binary_measure, envir = environment())

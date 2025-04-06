@@ -23,13 +23,27 @@ process_covariates <- function(gdp_data, births_gfr_data, sab_data, meta){
       gdp_sub <- gdp_data %>% dplyr::filter(iso_alpha_3_code == meta$iso.c[c])
       colselect <- which(gdp_sub %>% names() %in% paste0("YR", meta$year.t[t]+ seq(-2,2)))
       logGDP.ct[c,t] <- gdp_sub[,colselect] %>% unlist() %>% as.vector() %>% mean(na.rm=TRUE) %>% log()
+      ## SA edit: 
+      # Create gdp_smooth_covidfree, including 2023 but excluding 2020 to 2022
+      colselect_covidfree <- which(
+        gdp_sub %>% names() %in% paste0("YR", meta$year.t[t] + seq(-2,2)) &
+          !gdp_sub %>% names() %in% paste0("YR", 2020:2022)
+      )
+      
+      gdp_smooth_covidfree.ct[c,t] <- gdp_sub[,colselect_covidfree] %>%
+        unlist() %>%
+        as.vector() %>%
+        mean(na.rm = TRUE) %>%
+        log()
+      
       yearselect <- meta$year.t[t]
       sab.ct[c,t]  <- sab_data %>% dplyr::filter(iso_alpha_3_code == paste(meta$iso.c[c])) %>% dplyr::filter(year == yearselect) %>% dplyr::pull(`X0.5`)
     }
   }
   m <- list(
     births.ct = births.ct, gfr.ct = gfr.ct,
-    logGDP.ct=logGDP.ct,  logGDPnotsmooth.ct = logGDPnotsmooth.ct, sab.ct = sab.ct
+    logGDP.ct=logGDP.ct,  logGDPnotsmooth.ct = logGDPnotsmooth.ct, sab.ct = sab.ct,
+    logGDP_noncovid.ct = gdp_smooth_covidfree.ct
   )
   return(m)
 }

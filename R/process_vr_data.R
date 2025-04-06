@@ -3,10 +3,14 @@ process_vr_data<- function(# input files:
   vr_data,
   meta_precrisis,
   icd10codes = c("103", "104", "10M", "101")) {
-
+  ### [SA20240814 edit: change frmat xx to 1]
+  vr_data$Frmat <- ifelse(vr_data$Frmat=='xx', 1, vr_data$Frmat)
   exclude <- as.numeric(vr_data$Frmat) == 9 |
     as.numeric(vr_data$Year) < meta_precrisis$year.t[1] |
+    as.numeric(vr_data$Year) > max( meta_precrisis$year.t)|
     !is.element(vr_data$Country, meta_precrisis$whocode.c)
+  ### [end edit SA20240814]
+
   #mean(exclude)
   vrdat <- vr_data[!exclude,]
   
@@ -27,7 +31,7 @@ process_vr_data<- function(# input files:
   unknown.j <- vrdat$unk
   unknown.j[is.na(unknown.j)] <- 0
   # for maternal deaths, add all in unknown ages to the total maternal deaths
-  maternalset <- c("O96", "O97", "mat")
+  maternalset <- c("O96", "O97", "mat", "covid19")
   
   # for total deaths, redistribute according to age pattern of deaths
   # so add unknown*prop of deaths with known ages in 15-49 age group
@@ -46,6 +50,7 @@ process_vr_data<- function(# input files:
   late.k <- iso.k <- year.k <- tot.k <- matincllate.k <- ill.k <- icd.k <-
     #  totado.k <- matincllateado.k <- lateado.k <-
     grp2.k <-
+    covid19.k <-
     NULL
   # we don't pay attention to ill in adolescents yet
   for (iso in unique(iso.j)){
@@ -67,6 +72,9 @@ process_vr_data<- function(# input files:
                                                  totals.j[select & cause.j == "mat"],0))
         #    matincllateado.k <- c(matincllateado.k, ifelse(sum(select & cause.j == "mat") ==1,
         #                                                  totalsado.j[select & cause.j == "mat"],0))
+        covid19.k <- c(covid19.k, ifelse(sum(select & cause.j == "covid19") ==1,
+                                         totals.j[select & cause.j == "covid19"],0))
+        
         icd <- vrdat$List[select][1]
         icd.k <- c(icd.k, paste(icd))
         if (!is.element(icd, icd10codes)){
@@ -88,7 +96,7 @@ process_vr_data<- function(# input files:
   icd10.k <- ifelse(is.element(icd.k, icd10codes), TRUE, FALSE)
   late.k[icd10.k & is.na(late.k)] <- 0 #update from round 2015 (but there were none in 2015 round)
   #lateado.k[icd10.k & is.na(lateado.k)] <- 0 #update from round 2015 (but there were none in 2015 round)
-  
+  covid19.k[is.na(covid19.k)] <- 0
   # some country-specific exclusions
   include.k <- rep(TRUE, length(iso.k))
   excludereason.k <- rep(NA, length(iso.k))
@@ -115,7 +123,7 @@ process_vr_data<- function(# input files:
                        ill = ill.k,
                        include = include.k,
                        exclude.reason=excludereason.k,
-                       isicd10 = icd10.k, icd = icd.k
+                       isicd10 = icd10.k, icd = icd.k, covid19 = covid19.k
                        
   )
   remove(vrdat)

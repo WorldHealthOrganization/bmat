@@ -35,10 +35,9 @@
 # The "test" run length is simply to test that the code will run on your machine.
 # The minimum run length for plausible results is "quick". Official estimates use a minimum run length of "long".
 devtools::load_all()
-round_name_of_global_reference <- "estimates_12-19-22"
-round_name <- "test_onecountry"
+round_name_of_global_reference <- 'global_ref'
 round_first_year <- 1985
-round_last_year <- 2020
+round_last_year <- 2023
 selected_country_iso <- "BRA"
 run_length <- "test"
 server <- FALSE
@@ -73,24 +72,83 @@ file.copy(from = flist,
 # The third file has descriptive data such as indices and auxiliary data data such denomination (e.g. all cause deaths)
 #
 estimates_fixed_from_global_bmat <- readRDS(
-  here::here("default", round_name_of_global_reference, "bmat_global", "estimates_fixed_from_global.rds"))
+  here::here("output", round_name_of_global_reference, "bmat_global", "estimates_fixed_from_global.rds"))
 main_data <- read.csv(
   here::here("output", round_name, "main_data.csv"))
 meta <- readRDS(
   here::here("output", round_name, "meta.rds"))
 # Fit the model
-fit_bmat(
-  round_name = round_name,
-  iso_alpha_3_code = selected_country_iso,
-  main_data = main_data %>% 
-    dplyr::filter(iso_alpha_3_code == !!selected_country_iso),
-  meta = meta,
-  global_run = FALSE,
-  estimates_fixed_from_global_bmat = estimates_fixed_from_global_bmat,
-  jags_settings = jags_settings_bmat(run_length),
-  run_on_server = server,
-  arr_periods= list(c(2000,2015), c(2000, 2020), c(2010, 2020), c(2000, 2005), c(2005, 2010), c(2010, 2015), c(2015, 2020))
-)
+meta <- readRDS(here::here("output", round_name, "meta.rds"))
+
+main_data = read.csv(
+  here::here("output", round_name, "main_data.csv")) 
+
+for (iso_alpha_3_code in c("BRA")){
+  
+  print(iso_alpha_3_code)
+  main_path <- make_output_directory_return_path(round_name, iso_alpha_3_code, global_run = FALSE, bmis_or_bmat = "bmat")
+  
+  selected_country_iso = iso_alpha_3_code
+  fit_bmat2(
+    round_name = round_name,
+    iso_alpha_3_code = selected_country_iso,
+    main_data = main_data %>% 
+      dplyr::filter(iso_alpha_3_code == !!selected_country_iso#),
+                    ### Note: CANNOT BE RUN WITH VR DATA YET!!!
+                    # filter out just vr after 2020
+                    # ,!(year_start >= 2020 & type == "vr")
+      ) %>% dplyr::filter(year_end<2021|year_end>2023),
+    meta = meta,
+    global_run = FALSE,
+    estimates_fixed_from_global_bmat = estimates_fixed_from_global_bmat,
+    jags_settings = jags_settings_bmat(run_length),
+    run_on_server = server,
+    arr_periods= list(c(2000, 2023),c(2000, 2015),c(2016, 2023)),
+    covidmodel = FALSE
+    
+  )
+  
+  fit_bmat2(
+    round_name = round_name,
+    iso_alpha_3_code = selected_country_iso,
+    main_data = main_data %>% 
+      dplyr::filter(iso_alpha_3_code == !!selected_country_iso
+                    ### Note: CANNOT BE RUN WITH VR DATA YET!!!
+                    # filter out just vr after 2020
+                    # ,!(year_start >= 2020 & type == "vr")
+      ) ,
+    meta = meta,
+    global_run = FALSE,
+    estimates_fixed_from_global_bmat = estimates_fixed_from_global_bmat,
+    jags_settings = jags_settings_bmat(run_length),
+    run_on_server = server,
+    arr_periods= list(c(2000, 2023),c(2000, 2015),c(2016, 2023)),
+    covidmodel = TRUE
+    
+  )
+  
+  covid_est <- readRDS(here::here(file.path(main_path, "estimatescovid.rds")))
+  noncovid_est <- readRDS(here::here(file.path(main_path, "estimatesnoncovid.rds")))
+  
+  estimates_combined <- covid_est$estimates %>% subset(year_mid%in%2020:2022) %>% 
+    rbind(noncovid_est$estimates %>% subset(!year_mid%in%2020:2022))
+  
+  main_data_adjusted <- readRDS(here::here(file.path(main_path, "main_data_adjustedcovid.rds"))) %>% 
+    subset(year_end >2020) %>% rbind(readRDS(here::here(file.path(main_path, "main_data_adjustednoncovid.rds"))) %>% 
+                                       subset(year_end <=2020)) 
+  
+  main_data_adjusted$comp = main_data_adjusted$final_env/main_data_adjusted$env_total_who_estimated
+  
+  main_data_adjusted$include <- ifelse(main_data_adjusted$type=="vr"&main_data_adjusted$year_start%in%2020:2022&main_data_adjusted$comp<0.95, FALSE, main_data_adjusted$include)
+  
+  main_data_adjusted$include_reason <- ifelse(main_data_adjusted$type=="vr"&main_data_adjusted$year_start%in%2020:2022&main_data_adjusted$comp<0.95, "CRVS completeness <0.95 in a COVID-19 year", main_data_adjusted$include_reason)
+  
+  main_data_adjusted<- main_data_adjusted %>%  dplyr::select(-comp) 
+  saveRDS(estimates_combined, here::here(file.path(main_path, "estimates.rds")))
+  saveRDS(main_data_adjusted, here::here(file.path(main_path, "main_data_adjusted.rds")))
+  
+}
+
 ##########################################################################################################
 
 

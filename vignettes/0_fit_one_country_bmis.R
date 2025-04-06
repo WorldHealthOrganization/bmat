@@ -36,9 +36,9 @@
 # The minimum run length for plausible results is "quick". Official estimates use a minimum run length of "long".
 devtools::load_all()
 round_name <- "test_onecountry"
-round_name_of_global_reference <- "estimates_12-19-22"
+round_name_of_global_reference <- "global_ref"
 round_first_year <- 1985
-round_last_year <- 2020
+round_last_year <- 2023
 selected_country_iso <- "AUT"
 run_length <- "test"
 server <- FALSE
@@ -77,7 +77,8 @@ estimates_fixed_from_global_bmis = readRDS(
   here::here("default", round_name_of_global_reference, "bmis_global", "estimates.rds"))
 sens_spec_global = readRDS(
   here::here("default", round_name_of_global_reference, "bmis_global", "sens_spec_global.rds"))
-ssdata <- read.csv(here::here("output", round_name, "ssdata.csv")) 
+ssdata <- read.csv(here::here("output", round_name, "ssdata.csv")) %>% 
+  subset(year_mid <=2020|year_mid>2023)
 vrdata_w_frozen <- read.csv(here::here("output", round_name, "vrdata_w_frozen.csv"))
 # Fit the model
 fit_bmis(

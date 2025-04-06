@@ -137,7 +137,18 @@ process_vr_wrapper(
   meta_precrisis =  readRDS(
     here::here("output", round_name, "meta_precrisis.rds")),
   vr_data = readxl::read_excel(
-    here::here("data-raw", "dependent_data",  "vital_registration_WHO_2022.05.11.xlsx")),
+    here::here("data-raw", "dependent_data",  "mat05Aug2024.xls"),
+    sheet=2)%>% 
+    rbind(covid_vr = read.csv(
+      here::here("data-raw", "dependent_data", "covid_vr.csv")) %>% 
+        dplyr::filter(Sex==2) %>% 
+        dplyr::rename(A85=A85ov) %>% 
+        dplyr::mutate(A01=NA,A02=NA, A03=NA, A04=NA, A90=NA, A95ov=NA,...34=NA, 
+                      date=NA) %>% 
+        dplyr::select(-`A1_4`, -X )) %>%
+    dplyr::select(-`...34` ) %>% 
+    rbind(vr_add = readxl::read_excel(
+      here::here("data-raw", "dependent_data",  "mat_new_2024_12_05.xlsx") )),
   vr_special_case = readxl::read_excel(
     here::here("data-raw", "dependent_data", "vital_registration_special_cases_MMEIG_2019.xx.xx.xlsx")),
   round_name = round_name
@@ -149,7 +160,18 @@ process_vr_wrapper(
   meta_precrisis =  readRDS(
     here::here("output", round_name, "meta_precrisis.rds")),
   vr_data = readxl::read_excel(
-    here::here("data-raw", "dependent_data",  "vital_registration_WHO_2022.05.11.xlsx")),
+    here::here("data-raw", "dependent_data",  "mat05Aug2024.xls"),
+    sheet=2)%>% 
+    rbind(covid_vr = read.csv(
+      here::here("data-raw", "dependent_data", "covid_vr.csv")) %>% 
+        dplyr::filter(Sex==2) %>% 
+        dplyr::rename(A85=A85ov) %>% 
+        dplyr::mutate(A01=NA,A02=NA, A03=NA, A04=NA, A90=NA, A95ov=NA,...34=NA, 
+                      date=NA) %>% 
+        dplyr::select(-`A1_4`, -X ))%>%
+    dplyr::select(-`...34` ) %>% 
+    rbind(vr_add = readxl::read_excel(
+      here::here("data-raw", "dependent_data",  "mat_new_2024_12_05.xlsx") )),
   vr_special_case = readxl::read_excel(
     here::here("data-raw", "dependent_data", "vital_registration_special_cases_MMEIG_2019.xx.xx.xlsx")),
   round_name = round_name
@@ -162,6 +184,21 @@ vr_completness_data_for_steakholders(vrdata = read.csv(here::here("output", roun
 ##########################################################################################################
 ##########################       Study data    ###########################################################
 ##########################################################################################################
+# First combine 2022 and 2024 data sets 
+data_2021 = readxl::read_excel(
+  here::here("data-raw", "dependent_data", "specialised_studies_MMEIG_2022.12.19.xlsx"),  na = common_na_strings) %>%
+  dplyr::rename(year_end = `year_end `) %>%
+  dplyr::select(-refid, -live_births) %>%
+  dplyr::mutate(entry_type = ifelse(iso_alpha_3_code == "IND", "consult", "extract")) %>%
+  dplyr::rename(env_mat = env_maternal)
+data_2024 = readxl::read_excel(
+  here::here("data-raw", "dependent_data", "specialised_studies_MMEIG_2024.05.13v2.xlsx"),  na = common_na_strings) %>%
+  dplyr::rename(year_end = `year_end `) %>%
+  dplyr::select(-refid, -live_births) %>%
+  dplyr::mutate(entry_type = ifelse(iso_alpha_3_code == "IND", "consult", "extract")) %>%
+  dplyr::rename(env_mat = env_maternal) %>% 
+  dplyr::mutate(env_total=as.double(env_total))
+ssdat_combined <- dplyr:: bind_rows(data_2021, data_2024)
 # Process and saves study data.
 process_study_data(
   vrdata = read.csv(
@@ -191,12 +228,7 @@ process_study_data(
                   env_mat = as.numeric(env_mat),
                   up = as.numeric(up),
                   un = as.numeric(un)),
-  data_2021 = readxl::read_excel(
-    here::here("data-raw", "dependent_data", "specialised_studies_MMEIG_2022.12.19.xlsx"),  na = common_na_strings) %>% 
-    dplyr::rename(year_end = `year_end `) %>%
-    dplyr::select(-refid, -live_births) %>%
-    dplyr::mutate(entry_type = ifelse(iso_alpha_3_code == "IND", "consult", "extract")) %>%
-    dplyr::rename(env_mat = env_maternal),
+  data_2021 = ssdat_combined,
   round_name = round_name
 )
 ##########################################################################################################
@@ -209,7 +241,7 @@ process_study_data(
 # Process and saves census data.
 process_census_data(
   census_data = readxl::read_xlsx(
-    here::here("data-raw", "dependent_data", "census_WHO_2023.03.28.xlsx"), skip =1,  na = common_na_strings),
+    here::here("data-raw", "dependent_data", "census_WHO_2024.10.11.xlsx"), skip =1,  na = common_na_strings),
   meta =  readRDS(
     here::here("output", round_name, "meta.rds")),
   meta_precrisis =  readRDS(
@@ -234,14 +266,15 @@ process_census_data(
 # COD country.name == "Congo Democratic Republic"
 # SWZ start.date == 1999.5
 process_survey_data(
-  survey_data = readxl::read_excel(
-    here::here("data-raw", "dependent_data", "survey_DHS&MICS_2022.12.20.xlsx"), guess_max = 1048576) %>%
+  survey_data =read.csv(
+    here::here("data-raw", "dependent_data", "Dhs_input_2024-08-30.csv")) %>%
     dplyr::filter(definition != "Maternal-DHS") %>%
-    dplyr::mutate(pmdf = as.numeric(pmdf)) %>%
-    dplyr::mutate(total.deaths.obs = as.numeric(total.deaths.obs)) %>%
-    dplyr::mutate(se.pmdf.calc = as.numeric(se.pmdf.calc)) %>%
-    dplyr::mutate(log.pmdf.calc = as.numeric(log.pmdf.calc)) %>%
-    dplyr::mutate(se.log.pmdf.calc = as.numeric(se.log.pmdf.calc)), 
+    dplyr::mutate(
+      pmdf = as.numeric(gsub("[^0-9eE.-]", "", pmdf)),
+      total.deaths.obs = as.numeric(gsub("[^0-9eE.-]", "", total.deaths.obs)),
+      se.pmdf.calc = as.numeric(gsub("[^0-9eE.-]", "", se.pmdf.calc)),
+      log.pmdf.calc = as.numeric(gsub("[^0-9eE.-]", "", log.pmdf.calc)),
+      se.log.pmdf.calc = as.numeric(gsub("[^0-9eE.-]", "", se.log.pmdf.calc))), 
   round_name = round_name
 )
 ##########################################################################################################
@@ -261,6 +294,11 @@ process_miscellaneous_data(
       here::here("data-raw", "dependent_data", "miscellaneous_MMEIG_2022.12.19.xlsx"),  na = common_na_strings) %>% 
         dplyr::mutate(definition = "maternal") %>%
         dplyr::rename(live_births = `live births`) %>%
+        dplyr::mutate(final_pm = NA)) %>% 
+    dplyr::bind_rows(readxl::read_xlsx(
+      here::here("data-raw", "dependent_data", "miscellaneous_MMEIG_2024.08.22.xlsx"),  na = common_na_strings) %>% 
+        dplyr::mutate(definition = "maternal") %>%
+        dplyr::rename(live_births = `live births`) %>%
         dplyr::mutate(final_pm = NA)),
   meta =  readRDS(
     here::here("output", round_name, "meta.rds")),
@@ -270,4 +308,25 @@ process_miscellaneous_data(
   round_last_year = round_last_year,
   round_name
 )
+
 ##########################################################################################################
+### Exception using CRVS total deaths instead of WPP for AUS 2022, and LUX (with linear extrapolation for 2023 LUX)
+vrdata <-  read.csv(here::here("output", round_name, "vrdata.csv"))
+meta <-  readRDS(here::here("output", round_name, "meta.rds"))
+meta$deaths.ct[which(meta$iso.c=="AUS"), which(meta$year.t==2022)] <- vrdata$final_env[vrdata$iso_alpha_3_code=="AUS"&vrdata$year_start==2022]
+x <- vrdata$year_start[vrdata$iso_alpha_3_code == "LUX"]
+x <- x[1:35]
+y <- vrdata$final_env[vrdata$iso_alpha_3_code == "LUX"]
+y <- y[1:35]
+model <- lm(y ~ x)
+new_x <- 2023
+predicted_y <- predict(model, newdata = data.frame(x = new_x))
+result <- data.frame(new_x = new_x, predicted_y = predicted_y)
+y <- vrdata$final_env[vrdata$iso_alpha_3_code == "LUX"]
+y[39] <- result[1,2]
+meta$deaths.ct[which(meta$iso.c=="LUX"),] <- y
+saveRDS(meta, here::here("output", round_name, "meta.rds"))
+meta_precrisis <- readRDS(here::here("output", round_name, "meta_precrisis.rds"))
+meta_precrisis$deaths.ct[which(meta_precrisis$iso.c=="LUX"),] <- y
+saveRDS(meta_precrisis, here::here("output", round_name, "meta_precrisis.rds"))
+

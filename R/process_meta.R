@@ -44,7 +44,10 @@ process_meta <- function(meta_precrisis,
     }
   }
   meta_precrisis$deaths_incl_crisis.ct <- meta_precrisis$deaths.ct
+  meta_precrisis$deathsn_incl_crisis.ct <- meta_precrisis$deathsn.ct
   meta_precrisis$deaths.ct <- meta_precrisis$deaths.ct - meta_precrisis$crisisdeaths.ct
+  meta_precrisis$deathsn.ct <- meta_precrisis$deathsn.ct - meta_precrisis$crisisdeaths.ct
+  
   meta_precrisis$a.ct <- meta_precrisis$a_nocrisis.ct
   
   # GG moved from script that created jags data to here
