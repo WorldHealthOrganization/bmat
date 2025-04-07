@@ -36,8 +36,9 @@
 # The years and table years need to be edited each round.
 round_name <- "test"
 first_reporting_year <- 2000
+round_last_year=2023
 years <- paste0(first_reporting_year, "-", round_last_year)
-table1_years <- seq(first_reporting_year, round_last_year, 5)  
+table1_years <- c(2000, 2005, 2010, 2015,2019, 2023)
 devtools::load_all()
 library(kableExtra)
 library(float)
@@ -46,7 +47,7 @@ langs <- c("English", "Spanish", "French")
 
 
 # Text data which has been translated is required to create the profiles.
-text <- readxl::read_excel(here::here("data-raw", "countryprofile_translation.xlsx"))
+text <- readxl::read_excel(here::here("data-raw", "Countryprofile_translation_updated 30 Sept 2024 (2).xlsx"))
 # Meta data
 meta <-  readRDS(
   here::here("output", round_name, "meta.rds")
@@ -60,7 +61,7 @@ iso_alpha_3_codes <- meta$iso.c
 ##########################################################################################################
 # Territory data
 territory_info <- read.csv( 
-  here::here("output", round_name, "country_ref.csv"), fileEncoding="latin1")
+  here::here("output", round_name, "country_ref.csv"), fileEncoding = "UTF-8")
 whoregions <- territory_info$grp_who_region
 if (!dir.exists(here::here("output", round_name, "country_profile"))) dir.create(here::here("output", round_name, "country_profile"))
 for (lang in langs) {
@@ -83,6 +84,7 @@ main_data <- read.csv(
 ##########################################################################################################
 # Estimate run time for the printing of all profiles is a few hours. Plan accordingly.
 
+lang_codes <- c("English" = "EN", "Spanish" = "ES", "French" = "FR")
 
 for(lang in langs) {
   Sys.setlocale("LC_CTYPE", locale = paste0(lang, ".UTF-8"))
@@ -105,7 +107,7 @@ for(lang in langs) {
     who_name <- ter %>%
       dplyr::pull(paste0(lang))
     
-    
+    lang_code <- lang_codes[[lang]]
     main_path <- make_output_directory_return_path(round_name, global_run = FALSE, iso = iso_alpha_3_code, bmis_or_bmat = "bmat")
     df <- readRDS(here::here(main_path, 'main_data_adjusted.rds'))  %>%
       dplyr::mutate(period = paste0("[",round(year_start, 2),", ", round(year_end, 2), ")")) %>%
@@ -125,7 +127,7 @@ for(lang in langs) {
     meta <- readRDS(here::here(main_path, 'meta.rds'))
     estimates <- readRDS(here::here(main_path, 'estimates.rds'))
     estimates_arr <- readRDS(here::here(main_path, "estimates_arr.rds")) %>%
-      dplyr::filter(period %in% c("2000, 2020", "2010, 2020"))
+      dplyr::filter(period %in% c("2000, 2015", "2016, 2023", "2000, 2023"))
     
     df_excluded <- main_data %>%
       dplyr::filter(iso_alpha_3_code == !!iso_alpha_3_code) %>%
@@ -137,9 +139,12 @@ for(lang in langs) {
       dplyr::mutate(type = as.character(type))
     
     round_name_profile <- round_name
-    detach("package:kableExtra", unload=TRUE)
+    if ("package:kableExtra" %in% search()) {
+      detach("package:kableExtra", unload=TRUE)
+    }
+    
     rmarkdown::render(here::here("vignettes","country_profile.Rmd"), 
-                      output_file = here::here("output", round_name, "country_profile", lang, paste0(iso_alpha_3_code, ".pdf")),
+                      output_file = here::here("output", round_name, "country_profile", lang, paste0(iso_alpha_3_code, "_Profiles_", lang_code, ".pdf")),
                       envir = environment(),
                       params = list(iso_alpha_3_code = iso_alpha_3_code,
                                     who_name = who_name,
@@ -166,10 +171,31 @@ for(lang in langs) {
     ter_r <- territory_info %>% 
       dplyr::filter(iso_alpha_3_code %in% iso_alpha_3_codes) %>%
       dplyr::filter(grp_who_region == whoregion) 
-    
+    lang_code = lang_codes[[lang]]
     for (iso_alpha_3_code in unique(ter_r$iso_alpha_3_code)) {
-      file.copy(from = here::here("output", round_name, "country_profile", lang, paste0(iso_alpha_3_code, ".pdf")),
-                to = here::here("output", round_name, "country_profile", lang, whoregion, paste0(iso_alpha_3_code, ".pdf")), overwrite = TRUE)
+      file.copy(from = here::here("output", round_name, "country_profile", lang, paste0(iso_alpha_3_code,"_Profiles_", lang_code,".pdf")),
+                to = here::here("output", round_name, "country_profile", lang, whoregion, paste0(iso_alpha_3_code,"_Profiles_",lang_code, ".pdf")), overwrite = TRUE)
     }}}
 Sys.setlocale("LC_CTYPE", locale ="English.UTF-8")
+
+
+##### Zip country profile folders 
+
+library(zip)
+
+# Loop through languages and regions to create directories
+for (lang in langs) {
+  # Define the language folder path
+  lang_folder <- here::here("output", round_name, "country_profile", lang)
+  
+  # Create WHO region directories inside the language folder
+  
+  
+  # After creating the directories, zip the language folder
+  zip_file <- here::here("output", round_name, paste0("country_profile", lang, ".zip"))
+  
+  # Zip the entire language folder
+  zip::zipr(zip_file, lang_folder)
+}
+
 

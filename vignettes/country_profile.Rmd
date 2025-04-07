@@ -2,6 +2,7 @@
 title:
 output: pdf_document
 classoption: landscape
+latex_engine: lualatex
 # header-includes:
 #   - \usepackage{draftwatermark}
 params:
@@ -74,6 +75,11 @@ extra <- NULL
 if(iso_alpha_3_code == "SRB") {
 extra <- "Data for Serbia do not include data for Kosovo (United Nations Security Council Resolution 1244 (1999))"
 }
+
+if(iso_alpha_3_code == "LUX") {
+extra <- "All cause deaths to women 15-49 for Luxembourg are obtained from WHO Mortality Database"
+}
+
   # "Periods use interval notation where [a,b) describes an interval greater than or equal to a and less than b and [a,b] describes an interval greater than or equal to a and less than or equal to b"
 kableExtra::kbl(tbl1,
                 booktabs = T,
@@ -131,7 +137,7 @@ kableExtra::kbl(estimates_arr,
                 booktabs = T,
                 align = align_headers,
                 escape = F,
-                caption = params$text$"table 1 title",
+                caption = "Annual Rate of Reduction",
                 col.names = c(
                               params$text$"table 2 column names 1",
                               paste0(params$text$"table 2 column names 2",kableExtra::footnote_marker_symbol(1)),
@@ -145,6 +151,7 @@ kableExtra::kbl(estimates_arr,
   kableExtra::column_spec(1, width = "1.25in") %>%
   kableExtra::column_spec(2:3, width = "3in") 
 ```
+
 
 \newpage
 # `r params$text$"table 3 title"`
@@ -165,7 +172,11 @@ tbl3 <- df %>%
   dplyr::mutate(
     maternal_deaths_excluded = ifelse(!include, maternal_deaths, NA),
     maternal_deaths = ifelse(include, maternal_deaths, NA),
-    completeness = completeness*100
+    completeness = round(completeness*100, 2),
+    sens=round(sens*100, 2), 
+    spec=round(spec*100, 2),
+    usability_percentage= round(usability_percentage*100, 2),
+    adjustment= round(adjustment, 2)
   ) %>%
   dplyr::select(-include) %>%
   dplyr::relocate(period,
@@ -202,6 +213,7 @@ kableExtra::kbl(tbl3,
                               paste0(params$text$"table 3 column names 9",kableExtra::footnote_marker_alphabet(8))
                                 ),
                 escape = FALSE,
+                row.names = FALSE,
                 longtable = T) %>%
   kableExtra::kable_styling(latex_options = c("scale_down","striped", "HOLD_position", "repeat_header"),
                             font_size = 7) %>%
@@ -226,8 +238,8 @@ tbl_vr_ex <- df_excluded %>%
                 period,
                 include_reason) %>%
   dplyr::mutate(
-    completeness = completeness*100,
-    usability_percentage = usability_percentage*100
+    completeness = round(completeness*100,2),
+    usability_percentage = round(usability_percentage*100, 2)
   ) %>%
   dplyr::relocate(period) %>%
   dplyr::arrange(period)
@@ -240,7 +252,8 @@ tbl_vr_ex <- tbl_vr_ex %>%
                                                        ifelse(include_reason == "Start date before 1985", params$text$"table 4 reason for exclusion values 4",
                                                               ifelse(include_reason == "Study not nationally representative", params$text$"table 4 reason for exclusion values 5",
                                                                      ifelse(include_reason == "End after last year in estimates", params$text$"table 4 reason for exclusion values 6",
-                                                                            include_reason))))))))
+                       ifelse(include_reason == "CRVS completeness <0.95 in a COVID-19 year", params$text$"table 4 reason for exclusion values 8",                                                     
+                                                                            include_reason)))))))))
 
 if (nrow(tbl_vr_ex) > 0) {
 kableExtra::kbl(tbl_vr_ex,
@@ -253,6 +266,7 @@ kableExtra::kbl(tbl_vr_ex,
                               params$text$"table 4 column names 4"
                                 ),
                 escape = FALSE,
+                row.names = FALSE,
                 longtable = T
                 ) %>%
   kableExtra::kable_styling(latex_options = c("scale_down", "striped", "HOLD_position", "repeat_header"))  %>%
@@ -279,7 +293,8 @@ if (iso_alpha_3_code == "ITA") {
 tbl5 <- df %>%
   dplyr::filter(type != 'vr') %>% #might need to exclude other types shown in other sections
   dplyr::filter(include) %>%
-  dplyr::select(maternal_deaths = env_mat_final,
+  dplyr::mutate(maternal_deaths = ifelse(type=="inq", env_mat, env_mat_final)) %>% 
+  dplyr::select(maternal_deaths,
                 female_deaths = obs_env,
                 final_pm,
                 mmr_adjusted = mmr.adj.postmod,
@@ -292,11 +307,13 @@ tbl5 <- df %>%
                 fn,
                 up) %>%
   dplyr::mutate(
+    mmr_adjusted = mmr_adjusted,
+                mmr = mmr,
     pregnancy_related_deaths = NA,
-    maternal_pm = ifelse(definition == 'maternal', final_pm, NA),
-    pregn_pm = ifelse(definition == 'pregn', final_pm, NA),
-    mmr_adjusted = mmr_adjusted*100000,
-    mmr = mmr*100000
+    maternal_pm = ifelse(definition == 'maternal', round(final_pm, 4), NA),
+    pregn_pm = ifelse(definition == 'pregn', round(final_pm, 4), NA),
+    mmr_adjusted = round(mmr_adjusted*100000, 2),
+    mmr = round(mmr*100000, 2)
   )  %>%
     dplyr::mutate(source_type = ifelse(source_type == "inq", "Specialized study",
                                 ifelse(source_type == "vr", "CRVS",
@@ -315,6 +332,10 @@ tbl5 <- df %>%
                   mmr,
                   mmr_adjusted) %>%
   dplyr::arrange(period)
+if (iso_alpha_3_code == "IND") {
+  tbl5 <- tbl5 %>%
+    dplyr::mutate(maternal_deaths = ifelse(source_type == "Specialized study", NA, maternal_deaths))
+}
 
 tbl5 <- tbl5 %>%
   dplyr::mutate(source_type = ifelse(source_type == "Specialized study", params$text$"table 5 source type 1",
@@ -324,10 +345,7 @@ tbl5 <- tbl5 %>%
                                                            ifelse(source_type == "CRVS", params$text$"table 5 source type 5", source_type))))))
 
 # This hack hides maternal deaths for IND spec. studies per request by JC
-if (iso_alpha_3_code == "IND") {
-  tbl5 <- tbl5 %>%
-    dplyr::mutate(maternal_deaths = ifelse(source_type == "Specialized study", NA, maternal_deaths))
-}
+
 
 
 a <- params$text$"table 5 reference a"
@@ -363,6 +381,7 @@ kableExtra::kbl(tbl5,
                 ),
                 align = align_headers),
                 escape = FALSE,
+                row.names = FALSE,
                 longtable = T) %>%
   kableExtra::kable_styling() %>%
   kableExtra::kable_styling(latex_options = c("scale_down", "striped", "HOLD_position", "repeat_header"),
@@ -414,7 +433,8 @@ tbl6 <- tbl6 %>%
                                                               ifelse(include_reason == "Study not nationally representative", params$text$"table 4 reason for exclusion values 5",
                                                                      ifelse(include_reason == "End after last year in estimates", params$text$"table 4 reason for exclusion values 6",
                                                                             ifelse(include_reason == "No information on maternal deaths", params$text$"table 4 reason for exclusion values 7",
-                                                                                  include_reason))))))))
+                                                                                    ifelse(include_reason == "CRVS completeness <0.95 in a COVID-19 year", params$text$"table 4 reason for exclusion values 8",
+                                                                                  include_reason)))))))))
 
 tbl6 <- tbl6 %>%
   dplyr::relocate(period,
@@ -425,6 +445,7 @@ tbl6 <- tbl6 %>%
 
 if (nrow(tbl6) > 0) {
 kableExtra::kbl(tbl6,
+                row.names = FALSE,
                 booktabs = T,
                 escape = FALSE,
                                 align = align_headers,
@@ -468,6 +489,7 @@ c <- params$text$"reference sba"
 
 if (nrow(tbl_preds) > 0) {
 kableExtra::kbl(tbl_preds,
+                row.names = FALSE,
                 booktabs = T,
                                 align = align_headers,
                 escape = FALSE,
@@ -550,6 +572,7 @@ if (has_crisis) {
                   ),
                   align = align_headers),
                   escape = FALSE,
+                  row.names = FALSE,
                   longtable = T) %>%
     kableExtra::kable_styling(latex_options = c("striped", "HOLD_position", "repeat_header")) %>%
     kableExtra::footnote(alphabet = c(a), escape = FALSE, threeparttable = T) %>%

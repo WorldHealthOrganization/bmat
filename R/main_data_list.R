@@ -7,9 +7,9 @@ main_data_list <- function(vrdata,
   
   ssdata <- ssdata %>%
     dplyr::mutate(isfraction = (is.fraction(year_start) | is.fraction(year_end))) %>%
-    dplyr::mutate(year_start = floor(year_start)) %>%
-    dplyr::mutate(year_end = ceiling(year_end))
-    # 
+    dplyr::mutate(year_start = ifelse(iso_alpha_3_code=="DZA", year_start, floor(year_start))) %>%
+    dplyr::mutate(year_end = ifelse(iso_alpha_3_code=="DZA", year_end, ceiling(year_end)))
+  # 
   vrdata <- vrdata %>% 
     dplyr::filter(!is.na(include)) %>%
     dplyr::filter(include) %>%

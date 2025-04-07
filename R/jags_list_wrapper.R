@@ -15,12 +15,12 @@ jags_list_wrapper <- function(main_data,
   jags_list_central <- jags_list_central(ssdata = ssdata,
                                          first_year = first_year,
                                          last_year = last_year) # jags list containing general data not specific to a particular data model
-
-
+  
+  
   jags_list_m <- jags_list_multifarious(main_data = main_data,
-                                                   jags_list_central = jags_list_central,
-                                                   dm_i = dm_i) # jags list containing sub lists of data for each data model
-
+                                        jags_list_central = jags_list_central,
+                                        dm_i = dm_i) # jags list containing sub lists of data for each data model
+  
   jags_list_blend <- jags_list_blender(jags_list_central = jags_list_central,
                                        jags_list_m = jags_list_m,
                                        specmin = specmin,
@@ -28,7 +28,7 @@ jags_list_wrapper <- function(main_data,
                                        refyear = refyear,
                                        first_year = first_year) #jags list which combines the above data into a single list
   
-
+  
   if(!global_run){
     estimates <- estimates_fixed_from_global
     globalpars <- estimates$parameter_estimates_global
@@ -47,8 +47,8 @@ jags_list_wrapper <- function(main_data,
     jags_list_blend$eta_se_world <- rep(globalpars2 %>% dplyr::filter(k == 1) %>% dplyr::pull(`0.5`), jags_list_blend$nyears)
     jags_list_blend$eta_spec_world <- rep(globalpars2 %>% dplyr::filter(k == 2) %>% dplyr::pull(`0.5`), jags_list_blend$nyears)
   }
-
-
+  
+  
   return(jags_list_blend)
 }
 

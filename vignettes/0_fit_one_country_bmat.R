@@ -35,7 +35,7 @@
 # The "test" run length is simply to test that the code will run on your machine.
 # The minimum run length for plausible results is "quick". Official estimates use a minimum run length of "long".
 devtools::load_all()
-round_name_of_global_reference <- 'global_ref'
+round_name_of_global_reference <- 'estimates_11-12-2025'
 round_first_year <- 1985
 round_last_year <- 2023
 selected_country_iso <- "BRA"
@@ -93,10 +93,7 @@ for (iso_alpha_3_code in c("BRA")){
     round_name = round_name,
     iso_alpha_3_code = selected_country_iso,
     main_data = main_data %>% 
-      dplyr::filter(iso_alpha_3_code == !!selected_country_iso#),
-                    ### Note: CANNOT BE RUN WITH VR DATA YET!!!
-                    # filter out just vr after 2020
-                    # ,!(year_start >= 2020 & type == "vr")
+      dplyr::filter(iso_alpha_3_code == !!selected_country_iso
       ) %>% dplyr::filter(year_end<2021|year_end>2023),
     meta = meta,
     global_run = FALSE,
@@ -113,9 +110,6 @@ for (iso_alpha_3_code in c("BRA")){
     iso_alpha_3_code = selected_country_iso,
     main_data = main_data %>% 
       dplyr::filter(iso_alpha_3_code == !!selected_country_iso
-                    ### Note: CANNOT BE RUN WITH VR DATA YET!!!
-                    # filter out just vr after 2020
-                    # ,!(year_start >= 2020 & type == "vr")
       ) ,
     meta = meta,
     global_run = FALSE,

@@ -7,12 +7,12 @@ process_study_data <- function(vrdata,
                                data_2021,
                                round_name) {
   
-
+  
   # make a single dataset of raw study data
   ssdata_raw <- dplyr::bind_rows(data_2019, data_2021) %>%
     dplyr::mutate(subnational = ifelse(is.na(subnational), FALSE, subnational)) %>%
     dplyr::mutate(year_mid = 1 / 2 * (year_start + year_end))
-
+  
   # calculate sums of vrdata for each study period e.g. mat_vr
   ssdata_w_vr_calculations <- process_ssdata_w_vr_calculations(
     ssdata = ssdata_raw,
@@ -21,7 +21,7 @@ process_study_data <- function(vrdata,
   )
   # write.csv(ssdata_w_vr_calculations, row.names = FALSE, here::here("ssdata_w_vr_calculations.csv"))
   # ssdata_w_vr_calculations <- read.csv(here::here("ssdata_w_vr_calculations.csv"))
-
+  
   
   # add the S level to the check variable
   temp <- ssdata_w_vr_calculations
@@ -29,7 +29,7 @@ process_study_data <- function(vrdata,
   temp <- temp %>%
     dplyr::mutate(check_outside_of_vr = ifelse(check_outside_of_vr == "NA", NA, check_outside_of_vr))
   temp <- temp %>%
-    dplyr::mutate(check_outside_of_vr = ifelse(!is.na(check_outside_of_vr) & !is.na(env_mat) , check_outside_of_vr, "N")) %>%
+    dplyr::mutate(check_outside_of_vr = ifelse((!is.na(check_outside_of_vr) & !is.na(env_mat)) , check_outside_of_vr, "N")) %>%
     #Second, assume if checkalldeaths is missing & spec study envelope (total fem deaths) is not missing then checkalldeaths = S otherwise = checkalldeaths_update. “S” indicates using total env from study not reported checkalldeaths.
     dplyr::mutate(check_outside_of_vr = ifelse(is.na(check_outside_of_vr) & !is.na(env_total) & is.na(fn) & is.na(fp), "S", check_outside_of_vr))
   
@@ -185,7 +185,7 @@ process_study_data <- function(vrdata,
       dplyr::mutate(un = ifelse(complete, 0, un)) %>%
       dplyr::mutate(up = ifelse(complete, 0, up))
   }
-
+  
   
   
   
@@ -279,7 +279,7 @@ process_study_data <- function(vrdata,
     print(paste(ns$iso_alpha_3_code, ns$year_start,"-",ns$year_end, "has an identical duplicate."))
     stop()
   }
-
+  
   
   ################################################################################################## 
   #################       completeness calculation                  ###############################
@@ -363,9 +363,9 @@ process_study_data <- function(vrdata,
   #################       INDIA COMPLETNESS_INQ HACK                  ##############################
   ################################################################################################## 
   temp_final2 <- temp_final2 %>%
-    dplyr::mutate(tot2 = ifelse(iso_alpha_3_code == "IND", env_total2, tot2)) %>%
-    dplyr::mutate(tot_vr2 = ifelse(iso_alpha_3_code == "IND", env_total2, tot_vr2)) %>%
-    dplyr::mutate(completeness_inq = ifelse(iso_alpha_3_code == "IND", 1, completeness_inq))
+    dplyr::mutate(tot2 = ifelse(iso_alpha_3_code == "IND"|iso_alpha_3_code=="ZAF", env_total2, tot2)) %>%
+    dplyr::mutate(tot_vr2 = ifelse(iso_alpha_3_code == "IND"|iso_alpha_3_code=="ZAF", env_total2, tot_vr2)) %>%
+    dplyr::mutate(completeness_inq = ifelse(iso_alpha_3_code == "IND"|iso_alpha_3_code=="ZAF", 1, completeness_inq))
   
   
   ##################################################################################################  
@@ -434,8 +434,8 @@ process_study_data <- function(vrdata,
   
   ssdata <- temp_final2
   ##################################################################################################  
- ################################################################################################## 
-
+  ################################################################################################## 
+  
   
   
   # Calculate final PM 
@@ -504,22 +504,22 @@ process_study_data <- function(vrdata,
   write.csv(ssdata, row.names = FALSE, here::here("output",round_name, "ssdata.csv"))
   
 }
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
